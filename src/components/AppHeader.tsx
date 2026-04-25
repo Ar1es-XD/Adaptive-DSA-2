@@ -12,14 +12,14 @@ const links = [
 export function AppHeader() {
   const { pathname } = useLocation();
   return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-border/40 bg-background/85 backdrop-blur-xl">
       <div className="container flex h-14 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-primary shadow-glow">
-            <BookOpen className="h-4 w-4 text-primary-foreground" />
+        <Link to="/" className="flex items-center gap-2.5">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md border border-border/60 bg-card">
+            <BookOpen className="h-3.5 w-3.5 text-primary" />
           </div>
-          <span className="font-semibold tracking-tight">
-            <span className="gradient-text">Adaptive</span> DSA Tutor
+          <span className="text-sm font-medium tracking-tight text-foreground">
+            Cyber-Dojo
           </span>
         </Link>
         <nav className="flex items-center gap-1">

@@ -28,10 +28,10 @@ interface EvalResult {
   heuristics?: { hasLoop: boolean; hasRecursion: boolean; hasMap: boolean; hasReturn: boolean; lineCount: number };
 }
 
-const verdictStyles: Record<Verdict, { color: string; bg: string; border: string; Icon: typeof CheckCircle2 }> = {
-  "Accepted": { color: "text-success", bg: "bg-success/10", border: "border-success/40", Icon: CheckCircle2 },
-  "Wrong Answer": { color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/40", Icon: XCircle },
-  "Needs Improvement": { color: "text-warning", bg: "bg-warning/10", border: "border-warning/40", Icon: AlertCircle },
+const verdictMeta: Record<Verdict, { label: string; dot: string; text: string; border: string }> = {
+  "Accepted":          { label: "Accepted",          dot: "status-dot-correct",   text: "text-success",     border: "border-success/60" },
+  "Wrong Answer":      { label: "Wrong answer",      dot: "status-dot-incorrect", text: "text-destructive", border: "border-destructive/60" },
+  "Needs Improvement": { label: "Needs improvement", dot: "status-dot-partial",   text: "text-warning",     border: "border-warning/60" },
 };
 
 const ProblemSolve = () => {
@@ -180,105 +180,91 @@ const ProblemSolve = () => {
 
   const VerdictDisplay = () => {
     if (!result) return null;
-    const v = verdictStyles[result.verdict];
+    const v = verdictMeta[result.verdict];
     return (
-      <Card className={cn("border bg-card", v.border)}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium", v.border, v.bg, v.color)}>
-              <v.Icon className="h-3.5 w-3.5" />
-              {result.verdict}
-            </div>
-            <span className="font-mono text-xs text-muted-foreground">confidence {result.confidence}%</span>
-          </div>
-          <p className="mt-3 text-sm leading-relaxed text-foreground/90">{result.explanation}</p>
-          {result.issues.length > 0 && (
-            <div className="mt-3 border-t border-border/40 pt-3">
-              <div className="text-xs font-medium text-muted-foreground">What's off</div>
-              <ul className="mt-1 space-y-1 text-sm">
-                {result.issues.map((iss, i) => <li key={i} className="flex gap-2"><span className="text-warning">→</span>{iss}</li>)}
-              </ul>
-            </div>
-          )}
-          <div className="mt-3 text-sm">
-            <span className="text-xs font-medium text-muted-foreground">Approach: </span>
-            <span className="text-foreground/90">{result.optimization}</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className={cn("slide-in space-y-3 border-l-2 pl-4 py-1", v.border)}>
+        <div className="flex items-center gap-2.5">
+          <span className={cn("status-dot", v.dot)} />
+          <span className={cn("text-sm font-medium", v.text)}>{v.label}</span>
+          <span className="text-xs text-muted-foreground">· {result.confidence}% confidence</span>
+        </div>
+        <p className="text-[15px] leading-relaxed text-foreground/85">{result.explanation}</p>
+        {result.issues.length > 0 && (
+          <ul className="space-y-1 text-sm text-muted-foreground">
+            {result.issues.map((iss, i) => (
+              <li key={i}><span className="text-warning">→ </span>{iss}</li>
+            ))}
+          </ul>
+        )}
+        <p className="text-sm text-muted-foreground">
+          <span className="text-foreground/70">Approach · </span>{result.optimization}
+        </p>
+      </div>
     );
   };
 
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
-      <main className="container max-w-7xl py-6">
-        {/* Why this problem */}
-        <div className="mb-5 rounded-lg border border-border/60 bg-card/50 p-3">
-          <div className="flex items-start gap-2.5">
-            <Target className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <div className="flex-1 text-sm">
-              <div className="font-medium text-foreground">
-                Picked for you: working on {CONCEPT_LABELS[problem.concept]}
-              </div>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                This problem targets the area where you have the most room to grow.
-              </p>
-            </div>
-            <Link
-              to={`/concept/${problem.concept}`}
-              className="inline-flex shrink-0 items-center text-xs text-primary hover:underline"
-            >
-              <BookOpen className="mr-1 h-3.5 w-3.5" /> Concept
-            </Link>
-          </div>
+      <main className="container max-w-7xl py-8">
+        {/* Why this problem — quiet inline strip */}
+        <div className="mb-8 flex items-center gap-3 text-sm">
+          <Target className="h-4 w-4 shrink-0 text-primary" />
+          <span className="text-foreground/80">
+            Working on <span className="text-foreground">{CONCEPT_LABELS[problem.concept]}</span>
+          </span>
+          <span className="text-muted-foreground">— picked for where you have most room to grow</span>
+          <Link
+            to={`/concept/${problem.concept}`}
+            className="ml-auto inline-flex shrink-0 items-center text-xs text-muted-foreground hover:text-foreground"
+          >
+            <BookOpen className="mr-1 h-3.5 w-3.5" /> Concept
+          </Link>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-12">
-          {/* LEFT: problem */}
-          <div className="lg:col-span-4 space-y-4">
-            <Card className="border-border/60 bg-card">
-              <CardHeader className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <ConceptBadge concept={problem.concept} />
-                  <DifficultyBadge difficulty={problem.difficulty} />
-                </div>
-                <CardTitle className="text-xl">{problem.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5 text-sm">
-                <p className="text-foreground/90 leading-relaxed">{problem.description}</p>
-                <div>
-                  <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Examples</div>
-                  {problem.examples.map((ex, i) => (
-                    <div key={i} className="mt-2 rounded-md border border-border/50 bg-background/60 p-3 font-mono text-xs">
-                      <div><span className="text-muted-foreground">Input:</span> {ex.input}</div>
-                      <div><span className="text-muted-foreground">Output:</span> {ex.output}</div>
-                      {ex.explanation && <div className="mt-1 text-muted-foreground">{ex.explanation}</div>}
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Constraints</div>
-                  <ul className="space-y-0.5 font-mono text-xs text-muted-foreground">
-                    {problem.constraints.map((c, i) => <li key={i}>• {c}</li>)}
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
+        <div className="grid gap-10 lg:grid-cols-12">
+          {/* LEFT: problem — pure flow, no card */}
+          <div className="lg:col-span-3 space-y-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <ConceptBadge concept={problem.concept} />
+                <DifficultyBadge difficulty={problem.difficulty} />
+              </div>
+              <h1 className="text-xl font-medium tracking-tight">{problem.title}</h1>
+            </div>
+
+            <p className="text-sm leading-relaxed text-foreground/80">{problem.description}</p>
+
+            <div>
+              <div className="mb-2 text-[11px] uppercase tracking-wider text-muted-foreground">Examples</div>
+              <div className="space-y-2">
+                {problem.examples.map((ex, i) => (
+                  <div key={i} className="border-l-2 border-border/50 pl-3 font-mono text-xs">
+                    <div><span className="text-muted-foreground">in </span>{ex.input}</div>
+                    <div><span className="text-muted-foreground">out </span>{ex.output}</div>
+                    {ex.explanation && <div className="mt-1 font-sans text-muted-foreground">{ex.explanation}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 text-[11px] uppercase tracking-wider text-muted-foreground">Constraints</div>
+              <ul className="space-y-0.5 font-mono text-xs text-muted-foreground">
+                {problem.constraints.map((c, i) => <li key={i}>{c}</li>)}
+              </ul>
+            </div>
           </div>
 
-          {/* CENTER: editor */}
-          <div className="lg:col-span-5 space-y-4">
-            <Card className="border-border/60 bg-card">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                <div>
-                  <CardTitle className="text-base">Your solution</CardTitle>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Don't worry about perfect code — focus on the approach.
-                  </p>
+          {/* CENTER: editor — visual anchor */}
+          <div className="lg:col-span-6 space-y-8">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Your solution
                 </div>
                 <Select value={language} onValueChange={(v) => setLanguage(v as Language)}>
-                  <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-7 w-28 border-border/40 bg-transparent text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="python">Python</SelectItem>
                     <SelectItem value="javascript">JavaScript</SelectItem>
@@ -286,132 +272,152 @@ const ProblemSolve = () => {
                     <SelectItem value="java">Java</SelectItem>
                   </SelectContent>
                 </Select>
-              </CardHeader>
-              <CardContent>
-                <CodeEditor
-                  value={code}
-                  onChange={setCode}
-                  language={language}
-                  height={360}
-                />
-                <div className="mt-3 flex items-center gap-2">
-                  <Button onClick={handleRun} disabled={running || evaluating} variant="outline" size="sm">
-                    {running ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Play className="mr-1 h-3.5 w-3.5" />}
-                    Run sample tests
+              </div>
+              <CodeEditor
+                value={code}
+                onChange={setCode}
+                language={language}
+                height={420}
+              />
+              <div className="flex items-center gap-2 pt-1">
+                <Button
+                  onClick={handleRun}
+                  disabled={running || evaluating}
+                  variant="ghost"
+                  size="sm"
+                  className="text-foreground/80 hover:bg-secondary/60"
+                >
+                  {running ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Play className="mr-1.5 h-3.5 w-3.5" />}
+                  Run
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={running || evaluating}
+                  size="sm"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {evaluating ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-1.5 h-3.5 w-3.5" />}
+                  Submit
+                </Button>
+                {result && (
+                  <Button onClick={goNext} variant="ghost" size="sm" className="ml-auto text-muted-foreground hover:text-foreground">
+                    Next problem <ArrowRight className="ml-1 h-3.5 w-3.5" />
                   </Button>
-                  <Button onClick={handleSubmit} disabled={running || evaluating} size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    {evaluating ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-1 h-3.5 w-3.5" />}
-                    Submit
-                  </Button>
-                  {result && (
-                    <Button onClick={goNext} variant="ghost" size="sm" className="ml-auto">
-                      Next adaptive problem <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                )}
+              </div>
+            </div>
 
             {testRunResults && (
-              <Card className="border-border/60 bg-card">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm">Test cases</CardTitle>
-                  <p className="text-xs text-muted-foreground">Simulated walkthrough — no real execution</p>
-                </CardHeader>
-                <CardContent className="space-y-2">
+              <div className="fade-in space-y-2">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Test cases <span className="ml-1 text-muted-foreground/60">— simulated walkthrough</span>
+                </div>
+                <div className="space-y-1.5">
                   {visibleTests.map((tc, i) => {
                     const tr = testRunResults[i];
+                    const dotClass =
+                      tr?.status === "passed" ? "status-dot-correct"
+                      : tr?.status === "failed" ? "status-dot-incorrect"
+                      : "status-dot-idle";
                     return (
-                      <div key={i} className={cn(
-                        "flex items-center justify-between rounded-md border p-2 text-xs font-mono",
-                        tr?.status === "passed" && "border-success/30 bg-success/5",
-                        tr?.status === "failed" && "border-destructive/30 bg-destructive/5",
-                        tr?.status === "pending" && "border-border/50",
-                      )}>
-                        <div>
-                          <span className="text-muted-foreground">in:</span> {tc.input} <span className="ml-2 text-muted-foreground">expect:</span> {tc.expected}
-                        </div>
-                        {tr?.status === "passed" && <CheckCircle2 className="h-4 w-4 text-success" />}
-                        {tr?.status === "failed" && <XCircle className="h-4 w-4 text-destructive" />}
-                        {tr?.status === "pending" && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                      <div key={i} className="flex items-center gap-3 py-1 text-xs font-mono">
+                        <span className={cn("status-dot", dotClass)} />
+                        <span className="text-muted-foreground">in</span>
+                        <span className="text-foreground/85">{tc.input}</span>
+                        <span className="text-muted-foreground">→</span>
+                        <span className="text-foreground/85">{tc.expected}</span>
+                        {tr?.status === "pending" && <Loader2 className="ml-auto h-3 w-3 animate-spin text-muted-foreground" />}
                       </div>
                     );
                   })}
                   {hiddenCount > 0 && (
-                    <div className="rounded-md border border-dashed border-border/60 p-2 text-xs text-muted-foreground">
-                      + {hiddenCount} hidden test case{hiddenCount > 1 ? "s" : ""} (revealed on Submit)
+                    <div className="pt-1 text-xs text-muted-foreground">
+                      + {hiddenCount} hidden test case{hiddenCount > 1 ? "s" : ""} on submit
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             )}
 
             <VerdictDisplay />
           </div>
 
-          {/* RIGHT: Mentor sidebar */}
+          {/* RIGHT: Mentor — quiet tool, not a chatbot */}
           <div className="lg:col-span-3">
-            <Card className="border-border/60 bg-card lg:sticky lg:top-20">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Sparkles className="h-4 w-4 text-primary" /> Your Mentor
-                </CardTitle>
-                <p className="text-xs text-muted-foreground">Guidance, not answers.</p>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="hint">
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="hint" className="text-xs"><Lightbulb className="mr-1 h-3.5 w-3.5" /> Hints</TabsTrigger>
-                    <TabsTrigger value="debug" className="text-xs"><Bug className="mr-1 h-3.5 w-3.5" /> Debug</TabsTrigger>
-                  </TabsList>
+            <div className="space-y-4 lg:sticky lg:top-20">
+              <div className="flex items-center justify-between">
+                <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Mentor</div>
+                <span className="text-[11px] text-muted-foreground/70">Guidance, not answers</span>
+              </div>
 
-                  <TabsContent value="hint" className="space-y-3">
-                    {hintContent.length === 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Stuck? I'll nudge you in stages — concept, then pattern, then structure. I won't give the answer.
-                      </p>
-                    )}
-                    {hintContent.map((h, i) => (
-                      <div key={i} className="rounded-md border border-border/50 bg-background/40 p-3 text-sm">
-                        <div className="mb-1 text-xs font-medium text-muted-foreground">
-                          Hint {i + 1} of 3
-                        </div>
-                        <div className="prose prose-sm prose-invert max-w-none [&_p]:text-sm [&_p]:my-1 [&_ul]:my-1 [&_li]:text-sm">
-                          <ReactMarkdown>{h}</ReactMarkdown>
-                        </div>
-                      </div>
-                    ))}
-                    <Button onClick={requestHint} disabled={hintLoading || hintLevel >= 3} variant="outline" size="sm" className="w-full">
-                      {hintLoading ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Lightbulb className="mr-1 h-3.5 w-3.5" />}
-                      {hintLevel >= 3
-                        ? "No more hints"
-                        : hintLevel === 0
-                        ? "Give me a hint"
-                        : `Give me another hint (${hintLevel + 1} of 3)`}
-                    </Button>
-                  </TabsContent>
+              <Tabs defaultValue="hint">
+                <TabsList className="grid h-8 w-full grid-cols-2 bg-secondary/50 p-0.5">
+                  <TabsTrigger value="hint" className="h-7 text-xs data-[state=active]:bg-background">
+                    <Lightbulb className="mr-1 h-3 w-3" /> Hints
+                  </TabsTrigger>
+                  <TabsTrigger value="debug" className="h-7 text-xs data-[state=active]:bg-background">
+                    <Bug className="mr-1 h-3 w-3" /> Review
+                  </TabsTrigger>
+                </TabsList>
 
-                  <TabsContent value="debug" className="space-y-3">
-                    {!debugContent && (
-                      <p className="text-xs text-muted-foreground">
-                        I'll look at your code and your last result, then point out what's off — without rewriting it for you.
-                      </p>
-                    )}
-                    <Button onClick={requestDebug} disabled={debugLoading} variant="outline" size="sm" className="w-full">
-                      {debugLoading ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Bug className="mr-1 h-3.5 w-3.5" />}
-                      Look at my code
-                    </Button>
-                    {debugContent && (
-                      <div className="rounded-md border border-border/50 bg-background/40 p-3">
-                        <div className="prose prose-sm prose-invert max-w-none [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-primary [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:text-sm [&_p]:my-1 [&_code]:text-xs [&_pre]:text-xs">
-                          <ReactMarkdown>{debugContent}</ReactMarkdown>
-                        </div>
+                <TabsContent value="hint" className="mt-4 space-y-3">
+                  {hintContent.length === 0 && (
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      Three nudges, in order: concept, then pattern, then structure. No spoilers.
+                    </p>
+                  )}
+                  {hintContent.map((h, i) => (
+                    <div key={i} className="fade-in space-y-1.5 border-l-2 border-border/40 pl-3">
+                      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        Hint {i + 1}
                       </div>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
+                      <div className="prose prose-sm prose-invert max-w-none text-foreground/85 [&_p]:text-sm [&_p]:my-1 [&_p]:leading-relaxed [&_ul]:my-1 [&_li]:text-sm">
+                        <ReactMarkdown>{h}</ReactMarkdown>
+                      </div>
+                    </div>
+                  ))}
+                  <Button
+                    onClick={requestHint}
+                    disabled={hintLoading || hintLevel >= 3}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {hintLoading ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : <Lightbulb className="mr-1.5 h-3 w-3" />}
+                    {hintLevel >= 3
+                      ? "No more hints"
+                      : hintLevel === 0
+                      ? "Give me a hint"
+                      : `Next hint (${hintLevel + 1} of 3)`}
+                  </Button>
+                </TabsContent>
+
+                <TabsContent value="debug" className="mt-4 space-y-3">
+                  {!debugContent && (
+                    <p className="text-xs leading-relaxed text-muted-foreground">
+                      I'll point out what's off in your current code — no rewrites.
+                    </p>
+                  )}
+                  <Button
+                    onClick={requestDebug}
+                    disabled={debugLoading}
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {debugLoading ? <Loader2 className="mr-1.5 h-3 w-3 animate-spin" /> : <Bug className="mr-1.5 h-3 w-3" />}
+                    Review my code
+                  </Button>
+                  {debugContent && (
+                    <div className="fade-in border-l-2 border-border/40 pl-3">
+                      <div className="prose prose-sm prose-invert max-w-none text-foreground/85 [&_h3]:text-xs [&_h3]:uppercase [&_h3]:tracking-wider [&_h3]:font-medium [&_h3]:text-muted-foreground [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:my-1 [&_code]:text-xs [&_pre]:text-xs">
+                        <ReactMarkdown>{debugContent}</ReactMarkdown>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
           </div>
         </div>
       </main>
