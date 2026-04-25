@@ -273,11 +273,11 @@ const ProblemSolve = () => {
                 </Select>
               </CardHeader>
               <CardContent>
-                <Textarea
+                <CodeEditor
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  spellCheck={false}
-                  className="min-h-[320px] resize-y border-border/60 bg-background/60 font-mono text-sm leading-relaxed"
+                  onChange={setCode}
+                  language={language}
+                  height={360}
                 />
                 <div className="mt-3 flex items-center gap-2">
                   <Button onClick={handleRun} disabled={running || evaluating} variant="outline" size="sm">
