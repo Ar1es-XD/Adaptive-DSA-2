@@ -12,8 +12,13 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const sys = `You are a DSA tutor. Given the user's diagnostic scores per concept (0-100), produce a concise, actionable 2-3 day study plan.
-Return MARKDOWN only. Be brief and structured. Use headings: ## Focus Areas, ## 2-3 Day Plan, ## Recommended Practice. No fluff.`;
+    const sys = `You are a DSA tutor. Given the user's diagnostic scores per concept (0-100), produce a personalized profile + study plan.
+Return MARKDOWN only. Be brief, structured, and specific to the scores. Use EXACTLY these headings in this order:
+## Strengths
+## Weaknesses
+## Recommended Focus Areas
+## 2-3 Day Plan
+Rules: Strengths = concepts ≥70. Weaknesses = concepts <50. Focus Areas = the 1-2 lowest scores (always at least one). If no strengths, say so honestly. No fluff, no generic advice.`;
 
     const user = `Diagnostic scores:
 - Arrays: ${scores.arrays}%
@@ -21,7 +26,7 @@ Return MARKDOWN only. Be brief and structured. Use headings: ## Focus Areas, ## 
 - Sliding Window: ${scores["sliding-window"]}%
 - Recursion: ${scores.recursion}%
 
-Generate the plan. Prioritize the lowest-scoring concepts. Keep total under 250 words.`;
+Generate the profile + plan. Keep total under 250 words.`;
 
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
