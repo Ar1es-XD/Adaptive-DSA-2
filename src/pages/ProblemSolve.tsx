@@ -28,10 +28,10 @@ interface EvalResult {
   heuristics?: { hasLoop: boolean; hasRecursion: boolean; hasMap: boolean; hasReturn: boolean; lineCount: number };
 }
 
-const verdictStyles: Record<Verdict, { color: string; bg: string; border: string; Icon: typeof CheckCircle2 }> = {
-  "Accepted": { color: "text-success", bg: "bg-success/10", border: "border-success/40", Icon: CheckCircle2 },
-  "Wrong Answer": { color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/40", Icon: XCircle },
-  "Needs Improvement": { color: "text-warning", bg: "bg-warning/10", border: "border-warning/40", Icon: AlertCircle },
+const verdictMeta: Record<Verdict, { label: string; dot: string; text: string; border: string }> = {
+  "Accepted":          { label: "Accepted",          dot: "status-dot-correct",   text: "text-success",     border: "border-success/60" },
+  "Wrong Answer":      { label: "Wrong answer",      dot: "status-dot-incorrect", text: "text-destructive", border: "border-destructive/60" },
+  "Needs Improvement": { label: "Needs improvement", dot: "status-dot-partial",   text: "text-warning",     border: "border-warning/60" },
 };
 
 const ProblemSolve = () => {
@@ -180,32 +180,26 @@ const ProblemSolve = () => {
 
   const VerdictDisplay = () => {
     if (!result) return null;
-    const v = verdictStyles[result.verdict];
+    const v = verdictMeta[result.verdict];
     return (
-      <Card className={cn("border bg-card", v.border)}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between">
-            <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium", v.border, v.bg, v.color)}>
-              <v.Icon className="h-3.5 w-3.5" />
-              {result.verdict}
-            </div>
-            <span className="font-mono text-xs text-muted-foreground">confidence {result.confidence}%</span>
-          </div>
-          <p className="mt-3 text-sm leading-relaxed text-foreground/90">{result.explanation}</p>
-          {result.issues.length > 0 && (
-            <div className="mt-3 border-t border-border/40 pt-3">
-              <div className="text-xs font-medium text-muted-foreground">What's off</div>
-              <ul className="mt-1 space-y-1 text-sm">
-                {result.issues.map((iss, i) => <li key={i} className="flex gap-2"><span className="text-warning">→</span>{iss}</li>)}
-              </ul>
-            </div>
-          )}
-          <div className="mt-3 text-sm">
-            <span className="text-xs font-medium text-muted-foreground">Approach: </span>
-            <span className="text-foreground/90">{result.optimization}</span>
-          </div>
-        </CardContent>
-      </Card>
+      <div className={cn("slide-in space-y-3 border-l-2 pl-4 py-1", v.border)}>
+        <div className="flex items-center gap-2.5">
+          <span className={cn("status-dot", v.dot)} />
+          <span className={cn("text-sm font-medium", v.text)}>{v.label}</span>
+          <span className="text-xs text-muted-foreground">· {result.confidence}% confidence</span>
+        </div>
+        <p className="text-[15px] leading-relaxed text-foreground/85">{result.explanation}</p>
+        {result.issues.length > 0 && (
+          <ul className="space-y-1 text-sm text-muted-foreground">
+            {result.issues.map((iss, i) => (
+              <li key={i}><span className="text-warning">→ </span>{iss}</li>
+            ))}
+          </ul>
+        )}
+        <p className="text-sm text-muted-foreground">
+          <span className="text-foreground/70">Approach · </span>{result.optimization}
+        </p>
+      </div>
     );
   };
 
