@@ -1,4 +1,4 @@
-import type { DiagnosticQuestion } from "./types";
+import type { DiagnosticQuestion } from "@/lib/types";
 
 export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
   {
