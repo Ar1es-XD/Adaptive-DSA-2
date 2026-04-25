@@ -1,6 +1,13 @@
 // AI evaluation of an open-ended diagnostic answer.
-// Returns: { correct: boolean, understanding: "low"|"medium"|"high", feedback: string }
-// Deterministic (temperature=0) and uses tool-calling for strict JSON.
+// Acts like a sharp DSA mentor: reacts to what the student actually wrote.
+// Returns:
+// {
+//   status: "correct" | "partial" | "incorrect",
+//   understanding: "low" | "medium" | "high",
+//   feedback: string,        // 1-2 sentences, references the user's actual answer
+//   didWell?: string,        // 1 line, what they did well (if anything)
+//   missing?: string         // 1 line, what's missing (if not fully correct)
+// }
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,35 +39,55 @@ Deno.serve(async (req) => {
     if (!userAnswer || userAnswer.trim().length < 2) {
       return new Response(
         JSON.stringify({
-          correct: false,
+          status: "incorrect",
           understanding: "low",
-          feedback: "No meaningful answer was provided.",
+          feedback: "You didn't actually answer the question — share your thinking even if you're unsure.",
+          missing: "Any attempt to engage with the problem.",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const sys = `You are a strict, deterministic DSA tutor evaluating a student's diagnostic answer.
-You measure HOW THE STUDENT THINKS, not memorization. Be objective and consistent — same input must yield same output.
+    const sys = `You are a sharp, no-nonsense DSA mentor evaluating a student's thinking. You sound like a real interviewer — direct, specific, human. Never robotic, never generic.
 
-Question type is "${kind}":
-- "logical": evaluate whether the student's described strategy is correct, clear, and shows reasoning. The exact wording does not need to match the reference; equivalent correct ideas count.
-- "conceptual": evaluate whether the student's explanation captures the core idea. Partial but correct explanations can still be "correct: true" with "medium" understanding.
-- "coding": evaluate the code's logical correctness against the reference. Do NOT execute it — reason about it. Different but correct implementations are fine.
+You receive the question, the reference (private) answer, and the student's actual answer + reasoning. Your job is to react to WHAT THE STUDENT ACTUALLY WROTE.
 
-You MUST call the submit_evaluation tool with this JSON shape:
+Question type: "${kind}"
+- "logical": judge whether their described reasoning is sound. Equivalent correct ideas count even if worded differently.
+- "conceptual": judge whether they conveyed the core intuition, not memorized phrases.
+- "coding": reason about the code's logic. Do NOT execute it. Different correct implementations are fine.
+
+Call submit_evaluation with this JSON shape:
 {
-  "correct": boolean,        // overall: did the student arrive at a correct answer/strategy?
-  "understanding": "low" | "medium" | "high",  // depth of thinking shown
-  "feedback": string         // 1-3 sentences, concrete, specific, kind. For coding answers, mention any logic gaps.
+  "status": "correct" | "partial" | "incorrect",
+  "understanding": "low" | "medium" | "high",
+  "feedback": string,    // 1-2 sentences MAX. MUST quote or reference what the student wrote. Explain WHY it's right/wrong. Sound like a person.
+  "didWell": string,     // OPTIONAL. 1 line. Specific thing they got right. Omit if nothing notable.
+  "missing": string      // OPTIONAL but REQUIRED if status != "correct". 1 line. The exact key idea they missed — never just "too short".
 }
 
-Rules for "understanding":
-- "high": correct AND explained/justified clearly with insight into WHY.
-- "medium": correct or mostly correct but reasoning is shallow / missing edge cases / mechanical.
-- "low": incorrect, off-topic, vague, or shows misconception.
+GOOD feedback examples:
+- "You said 'comparisons double' — exactly right, because each new element is checked once, so work scales linearly."
+- "You wrote 'O(n)' but didn't say WHY — the key idea is that each element is touched a constant number of times."
+- "Your loop only checks nums[i] vs nums[0], not nums[i+1] — you're not actually checking consecutive pairs."
 
-Never reveal the reference answer in feedback. Do not be encouraging if the answer is wrong — be honest and specific.`;
+BAD (never do this):
+- "Good job!" / "Correct."
+- "Your answer is too short."
+- "Try to elaborate more."
+- "You showed some understanding."
+
+Understanding levels:
+- "high": correct AND shows insight into WHY (mechanism, not just outcome).
+- "medium": correct or close, but mechanical / shallow / missing edge cases.
+- "low": wrong, off-topic, vague, or shows misconception.
+
+Status levels:
+- "correct": the core answer is right and the reasoning is sound enough.
+- "partial": right idea but missing a key piece, OR correct answer with weak reasoning.
+- "incorrect": wrong answer or fundamentally wrong reasoning.
+
+Never reveal the reference answer in feedback. Be honest, not encouraging.`;
 
     const user = `Concept: ${concept}
 Question type: ${kind}
@@ -87,11 +114,13 @@ Evaluate.`;
           parameters: {
             type: "object",
             properties: {
-              correct: { type: "boolean" },
+              status: { type: "string", enum: ["correct", "partial", "incorrect"] },
               understanding: { type: "string", enum: ["low", "medium", "high"] },
               feedback: { type: "string" },
+              didWell: { type: "string" },
+              missing: { type: "string" },
             },
-            required: ["correct", "understanding", "feedback"],
+            required: ["status", "understanding", "feedback"],
             additionalProperties: false,
           },
         },
@@ -144,7 +173,7 @@ Evaluate.`;
       console.error("No tool call. Content:", txt);
       return new Response(
         JSON.stringify({
-          correct: false,
+          status: "incorrect",
           understanding: "low",
           feedback: txt || "Could not evaluate the answer.",
         }),

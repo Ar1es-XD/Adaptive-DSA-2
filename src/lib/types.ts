@@ -35,10 +35,14 @@ export interface DiagnosticQuestion {
   referenceReasoning?: string;
 }
 
+export type DiagnosticStatus = "correct" | "partial" | "incorrect";
+
 export interface DiagnosticEvaluation {
-  correct: boolean;
+  status: DiagnosticStatus;
   understanding: "low" | "medium" | "high";
   feedback: string;
+  didWell?: string;
+  missing?: string;
 }
 
 export interface DiagnosticResponse {
