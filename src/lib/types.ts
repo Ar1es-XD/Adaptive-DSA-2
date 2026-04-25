@@ -20,13 +20,32 @@ export interface Problem {
   starterCode: Record<Language, string>;
 }
 
+export type DiagnosticKind = "logical" | "conceptual" | "coding";
+
 export interface DiagnosticQuestion {
   id: string;
   concept: Concept;
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
+  kind: DiagnosticKind;
+  prompt: string;
+  /** For coding questions: starter code + language */
+  starter?: string;
+  language?: Language;
+  /** Reference answer + reasoning used by the AI evaluator (never shown to user) */
+  referenceAnswer: string;
+  referenceReasoning?: string;
+}
+
+export interface DiagnosticEvaluation {
+  correct: boolean;
+  understanding: "low" | "medium" | "high";
+  feedback: string;
+}
+
+export interface DiagnosticResponse {
+  questionId: string;
+  answer: string;
+  reasoning: string;
+  evaluation?: DiagnosticEvaluation;
 }
 
 export interface ConceptStats {
