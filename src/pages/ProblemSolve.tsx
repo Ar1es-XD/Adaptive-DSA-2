@@ -213,34 +213,44 @@ const ProblemSolve = () => {
     <div className="min-h-screen bg-background">
       <AppHeader />
       <main className="container max-w-7xl py-6">
-        {/* Adaptivity banner */}
-        <div className="mb-4 flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3">
-          <Target className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <p className="text-sm text-foreground/90">
-            This problem is selected because you need to improve in <strong>{CONCEPT_LABELS[problem.concept]}</strong>.
-            <Link to={`/concept/${problem.concept}`} className="ml-2 inline-flex items-center text-primary hover:underline">
-              <BookOpen className="mr-1 h-3.5 w-3.5" /> Learn this concept
+        {/* Why this problem */}
+        <div className="mb-5 rounded-lg border border-border/60 bg-card/50 p-3">
+          <div className="flex items-start gap-2.5">
+            <Target className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+            <div className="flex-1 text-sm">
+              <div className="font-medium text-foreground">
+                Picked for you: working on {CONCEPT_LABELS[problem.concept]}
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                This problem targets the area where you have the most room to grow.
+              </p>
+            </div>
+            <Link
+              to={`/concept/${problem.concept}`}
+              className="inline-flex shrink-0 items-center text-xs text-primary hover:underline"
+            >
+              <BookOpen className="mr-1 h-3.5 w-3.5" /> Concept
             </Link>
-          </p>
+          </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-12">
+        <div className="grid gap-5 lg:grid-cols-12">
           {/* LEFT: problem */}
           <div className="lg:col-span-4 space-y-4">
-            <Card className="border-border/60 bg-gradient-card shadow-card">
-              <CardHeader>
+            <Card className="border-border/60 bg-card">
+              <CardHeader className="space-y-2">
                 <div className="flex items-center gap-2">
                   <ConceptBadge concept={problem.concept} />
                   <DifficultyBadge difficulty={problem.difficulty} />
                 </div>
-                <CardTitle className="mt-2 text-xl">{problem.title}</CardTitle>
+                <CardTitle className="text-xl">{problem.title}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm">
+              <CardContent className="space-y-5 text-sm">
                 <p className="text-foreground/90 leading-relaxed">{problem.description}</p>
                 <div>
-                  <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Examples</div>
+                  <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Examples</div>
                   {problem.examples.map((ex, i) => (
-                    <div key={i} className="mt-2 rounded-md border border-border/60 bg-background/50 p-3 font-mono text-xs">
+                    <div key={i} className="mt-2 rounded-md border border-border/50 bg-background/60 p-3 font-mono text-xs">
                       <div><span className="text-muted-foreground">Input:</span> {ex.input}</div>
                       <div><span className="text-muted-foreground">Output:</span> {ex.output}</div>
                       {ex.explanation && <div className="mt-1 text-muted-foreground">{ex.explanation}</div>}
@@ -248,7 +258,7 @@ const ProblemSolve = () => {
                   ))}
                 </div>
                 <div>
-                  <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Constraints</div>
+                  <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Constraints</div>
                   <ul className="space-y-0.5 font-mono text-xs text-muted-foreground">
                     {problem.constraints.map((c, i) => <li key={i}>• {c}</li>)}
                   </ul>
@@ -259,9 +269,14 @@ const ProblemSolve = () => {
 
           {/* CENTER: editor */}
           <div className="lg:col-span-5 space-y-4">
-            <Card className="border-border/60 bg-gradient-card shadow-card">
+            <Card className="border-border/60 bg-card">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                <CardTitle className="text-base">Code</CardTitle>
+                <div>
+                  <CardTitle className="text-base">Your solution</CardTitle>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Don't worry about perfect code — focus on the approach.
+                  </p>
+                </div>
                 <Select value={language} onValueChange={(v) => setLanguage(v as Language)}>
                   <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -284,7 +299,7 @@ const ProblemSolve = () => {
                     {running ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Play className="mr-1 h-3.5 w-3.5" />}
                     Run sample tests
                   </Button>
-                  <Button onClick={handleSubmit} disabled={running || evaluating} size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90">
+                  <Button onClick={handleSubmit} disabled={running || evaluating} size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
                     {evaluating ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-1 h-3.5 w-3.5" />}
                     Submit
                   </Button>
