@@ -313,17 +313,20 @@ const ProblemSolve = () => {
             </Card>
 
             {testRunResults && (
-              <Card className="border-border/60 bg-gradient-card shadow-card">
-                <CardHeader className="pb-2"><CardTitle className="text-sm">Test cases (simulated — no execution)</CardTitle></CardHeader>
+              <Card className="border-border/60 bg-card">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Test cases</CardTitle>
+                  <p className="text-xs text-muted-foreground">Simulated walkthrough — no real execution</p>
+                </CardHeader>
                 <CardContent className="space-y-2">
                   {visibleTests.map((tc, i) => {
                     const tr = testRunResults[i];
                     return (
                       <div key={i} className={cn(
                         "flex items-center justify-between rounded-md border p-2 text-xs font-mono",
-                        tr?.status === "passed" && "border-success/40 bg-success/5",
-                        tr?.status === "failed" && "border-destructive/40 bg-destructive/5",
-                        tr?.status === "pending" && "border-border/60",
+                        tr?.status === "passed" && "border-success/30 bg-success/5",
+                        tr?.status === "failed" && "border-destructive/30 bg-destructive/5",
+                        tr?.status === "pending" && "border-border/50",
                       )}>
                         <div>
                           <span className="text-muted-foreground">in:</span> {tc.input} <span className="ml-2 text-muted-foreground">expect:</span> {tc.expected}
@@ -335,7 +338,7 @@ const ProblemSolve = () => {
                     );
                   })}
                   {hiddenCount > 0 && (
-                    <div className="rounded-md border border-dashed border-border p-2 text-xs text-muted-foreground">
+                    <div className="rounded-md border border-dashed border-border/60 p-2 text-xs text-muted-foreground">
                       + {hiddenCount} hidden test case{hiddenCount > 1 ? "s" : ""} (revealed on Submit)
                     </div>
                   )}
@@ -346,13 +349,14 @@ const ProblemSolve = () => {
             <VerdictDisplay />
           </div>
 
-          {/* RIGHT: AI Assist sidebar */}
+          {/* RIGHT: Mentor sidebar */}
           <div className="lg:col-span-3">
-            <Card className="border-border/60 bg-gradient-card shadow-card lg:sticky lg:top-20">
+            <Card className="border-border/60 bg-card lg:sticky lg:top-20">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Sparkles className="h-4 w-4 text-primary" /> AI Assistant
+                  <Sparkles className="h-4 w-4 text-primary" /> Your Mentor
                 </CardTitle>
+                <p className="text-xs text-muted-foreground">Guidance, not answers.</p>
               </CardHeader>
               <CardContent>
                 <Tabs defaultValue="hint">
@@ -362,10 +366,16 @@ const ProblemSolve = () => {
                   </TabsList>
 
                   <TabsContent value="hint" className="space-y-3">
-                    <p className="text-xs text-muted-foreground">3 escalating levels — concept → pattern → structure. Never reveals the solution.</p>
+                    {hintContent.length === 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Stuck? I'll nudge you in stages — concept, then pattern, then structure. I won't give the answer.
+                      </p>
+                    )}
                     {hintContent.map((h, i) => (
-                      <div key={i} className="rounded-md border border-border/60 bg-background/40 p-3 text-sm">
-                        <div className="mb-1 text-xs font-semibold text-primary">Level {i + 1}</div>
+                      <div key={i} className="rounded-md border border-border/50 bg-background/40 p-3 text-sm">
+                        <div className="mb-1 text-xs font-medium text-muted-foreground">
+                          Hint {i + 1} of 3
+                        </div>
                         <div className="prose prose-sm prose-invert max-w-none [&_p]:text-sm [&_p]:my-1 [&_ul]:my-1 [&_li]:text-sm">
                           <ReactMarkdown>{h}</ReactMarkdown>
                         </div>
@@ -373,18 +383,26 @@ const ProblemSolve = () => {
                     ))}
                     <Button onClick={requestHint} disabled={hintLoading || hintLevel >= 3} variant="outline" size="sm" className="w-full">
                       {hintLoading ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Lightbulb className="mr-1 h-3.5 w-3.5" />}
-                      {hintLevel >= 3 ? "All levels revealed" : `Get hint level ${hintLevel + 1}`}
+                      {hintLevel >= 3
+                        ? "No more hints"
+                        : hintLevel === 0
+                        ? "Give me a hint"
+                        : `Give me another hint (${hintLevel + 1} of 3)`}
                     </Button>
                   </TabsContent>
 
                   <TabsContent value="debug" className="space-y-3">
-                    <p className="text-xs text-muted-foreground">Analyzes your code + last verdict. Identifies issues without giving the full fix.</p>
+                    {!debugContent && (
+                      <p className="text-xs text-muted-foreground">
+                        I'll look at your code and your last result, then point out what's off — without rewriting it for you.
+                      </p>
+                    )}
                     <Button onClick={requestDebug} disabled={debugLoading} variant="outline" size="sm" className="w-full">
                       {debugLoading ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <Bug className="mr-1 h-3.5 w-3.5" />}
-                      Debug my code
+                      Look at my code
                     </Button>
                     {debugContent && (
-                      <div className="rounded-md border border-border/60 bg-background/40 p-3">
+                      <div className="rounded-md border border-border/50 bg-background/40 p-3">
                         <div className="prose prose-sm prose-invert max-w-none [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-primary [&_h3]:mt-3 [&_h3]:mb-1 [&_p]:text-sm [&_p]:my-1 [&_code]:text-xs [&_pre]:text-xs">
                           <ReactMarkdown>{debugContent}</ReactMarkdown>
                         </div>
