@@ -40,22 +40,9 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
       "It exploits the overlap between consecutive subarrays so each element is added and removed at most once, yielding O(n) time.",
   },
 
-  // 4. Conceptual — recursion base case
+  // 4. Coding — small implementation (arrays / loop)
   {
     id: "q4",
-    concept: "recursion",
-    kind: "conceptual",
-    prompt:
-      "What is a 'base case' in recursion, and what happens if a recursive function does not have one (or has the wrong one)? Answer briefly in your own words.",
-    referenceAnswer:
-      "A base case is the smallest version of the problem whose answer is known directly, without recursing further. It is the stopping condition. Without a correct base case, the function calls itself indefinitely, eventually causing a stack overflow.",
-    referenceReasoning:
-      "Recursion reduces a problem toward the base case; the base case anchors the recursion so that the call stack can unwind with concrete answers.",
-  },
-
-  // 5. Coding — small implementation (arrays / loop)
-  {
-    id: "q5",
     concept: "arrays",
     kind: "coding",
     language: "python",
@@ -66,9 +53,9 @@ export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
       "def count_positive(nums):\n    count = 0\n    for x in nums:\n        if x > 0:\n            count += 1\n    return count",
   },
 
-  // 6. Coding — recursion
+  // 5. Coding — recursion
   {
-    id: "q6",
+    id: "q5",
     concept: "recursion",
     kind: "coding",
     language: "python",
