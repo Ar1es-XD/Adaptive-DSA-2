@@ -19,7 +19,7 @@ export function AppHeader() {
             <BookOpen className="h-3.5 w-3.5 text-primary" />
           </div>
           <span className="text-sm font-medium tracking-tight text-foreground">
-            Cyber-Dojo
+            DSA Tutor
           </span>
         </Link>
         <nav className="flex items-center gap-1">

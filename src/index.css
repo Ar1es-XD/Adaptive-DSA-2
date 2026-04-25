@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Cyber-Dojo — calm, focused training environment. All colors HSL. */
+/* DSA Tutor — calm, focused training environment. All colors HSL. */
 
 @layer base {
   :root {
