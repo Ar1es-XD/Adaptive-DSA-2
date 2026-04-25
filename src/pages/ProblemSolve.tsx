@@ -182,26 +182,26 @@ const ProblemSolve = () => {
     if (!result) return null;
     const v = verdictStyles[result.verdict];
     return (
-      <Card className={cn("border-2", v.border, v.bg)}>
+      <Card className={cn("border bg-card", v.border)}>
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <v.Icon className={cn("h-5 w-5", v.color)} />
-              <span className={cn("text-lg font-semibold", v.color)}>{result.verdict}</span>
+            <div className={cn("inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium", v.border, v.bg, v.color)}>
+              <v.Icon className="h-3.5 w-3.5" />
+              {result.verdict}
             </div>
             <span className="font-mono text-xs text-muted-foreground">confidence {result.confidence}%</span>
           </div>
-          <p className="mt-3 text-sm text-foreground/90">{result.explanation}</p>
+          <p className="mt-3 text-sm leading-relaxed text-foreground/90">{result.explanation}</p>
           {result.issues.length > 0 && (
-            <div className="mt-3">
-              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Issues</div>
+            <div className="mt-3 border-t border-border/40 pt-3">
+              <div className="text-xs font-medium text-muted-foreground">What's off</div>
               <ul className="mt-1 space-y-1 text-sm">
-                {result.issues.map((iss, i) => <li key={i} className="flex gap-2"><span className="text-destructive">•</span>{iss}</li>)}
+                {result.issues.map((iss, i) => <li key={i} className="flex gap-2"><span className="text-warning">→</span>{iss}</li>)}
               </ul>
             </div>
           )}
           <div className="mt-3 text-sm">
-            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Optimization: </span>
+            <span className="text-xs font-medium text-muted-foreground">Approach: </span>
             <span className="text-foreground/90">{result.optimization}</span>
           </div>
         </CardContent>
