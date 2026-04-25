@@ -102,7 +102,8 @@ const Diagnostic = () => {
       sums[qq.concept].count += 1;
     });
     const scores = CONCEPTS.reduce((acc, c) => {
-      acc[c] = sums[c].count > 0 ? Math.round(sums[c].total / sums[c].count) : 0;
+      // Untested concepts default to a neutral 50 (not a false weakness)
+      acc[c] = sums[c].count > 0 ? Math.round(sums[c].total / sums[c].count) : 50;
       return acc;
     }, {} as Record<Concept, number>);
     setDiagnostic(scores);

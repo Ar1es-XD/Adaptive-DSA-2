@@ -1,68 +1,68 @@
 import type { DiagnosticQuestion } from "@/lib/types";
 
 export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
-  // 1. Logical reasoning — pattern / scanning intuition (arrays)
+  // Q1 — Logical reasoning: linear growth (arrays / linear scan)
   {
     id: "q1",
     concept: "arrays",
     kind: "logical",
     prompt:
-      "You have a long row of numbered lockers. You walk past them once, left to right, and you may only remember a constant number of values at a time. Describe a strategy to find the largest number written on any locker, and explain why your approach is reliable.",
+      "You are scanning a list of numbers to find the largest value. You compare each element with the current maximum one by one.\n\nIf the list size doubles, how does the number of comparisons change? Explain your reasoning.",
     referenceAnswer:
-      "Keep a running variable 'best' initialized to the first locker's number. For each subsequent locker, if its number is greater than 'best', update 'best'. After the single pass, 'best' holds the maximum.",
+      "The number of comparisons also roughly doubles. If the list has n elements, you do about n comparisons. Doubling n to 2n means about 2n comparisons — it grows linearly with the size of the list.",
     referenceReasoning:
-      "A single linear scan with O(1) memory is sufficient because the maximum is invariant under order, and updating only on a strictly greater value preserves the running maximum.",
+      "Each element is visited exactly once, so the work scales linearly with input size (linear growth).",
   },
 
-  // 2. Logical reasoning — two pointers intuition (no jargon)
+  // Q2 — Logical reasoning: hidden quadratic (nested comparisons → motivates two pointers / smarter scans)
   {
     id: "q2",
     concept: "two-pointers",
     kind: "logical",
     prompt:
-      "You are given a SORTED list of numbers and a target value T. You want to find two numbers in the list that add up to T. Without using extra memory, describe a method that avoids checking every pair, and explain why it works.",
+      "You have a list of n numbers. For each number, you compare it with every other number in the list.\n\nHow does the number of comparisons grow as n increases? Explain in simple terms.",
     referenceAnswer:
-      "Place one pointer at the start (left) and one at the end (right). Compute the sum of the two pointed numbers. If sum == T, done. If sum < T, move left pointer right (increase sum). If sum > T, move right pointer left (decrease sum). Repeat until they meet.",
+      "For each of the n numbers you do about n comparisons, so the total is about n × n = n² comparisons. If n doubles, the work grows roughly four times. The growth is quadratic — much faster than linear.",
     referenceReasoning:
-      "Sortedness makes the sum monotonic with respect to pointer moves, so each move safely eliminates one number from consideration, giving O(n) time and O(1) space.",
+      "Two nested passes over the list produce n² work; the student should recognize the multiplicative effect, not just say 'a lot more'.",
   },
 
-  // 3. Conceptual — sliding window
+  // Q3 — Conceptual: what does O(n) mean
   {
     id: "q3",
     concept: "sliding-window",
     kind: "conceptual",
     prompt:
-      "In your own words, when does the sliding-window technique apply, and what does it let you avoid recomputing? Give one short example of a problem where it helps.",
+      "What does it mean when we say an algorithm is O(n)? Explain in your own words (no formal definition needed).",
     referenceAnswer:
-      "Sliding window applies to problems over a contiguous subarray or substring with a constraint (sum, length, distinct chars, etc.). It avoids recomputing the answer for each subarray from scratch by reusing the previous window's state and updating it incrementally as one end advances and the other shrinks. Example: longest substring without repeating characters, or maximum sum of any k-length subarray.",
+      "It means the work the algorithm does grows in direct proportion to the input size n. If the input doubles, the work roughly doubles. The algorithm touches each item a constant number of times — it does not revisit or re-compare excessively.",
     referenceReasoning:
-      "It exploits the overlap between consecutive subarrays so each element is added and removed at most once, yielding O(n) time.",
+      "The student should convey proportional growth and the intuition of 'one pass / constant work per item', not just repeat the symbol.",
   },
 
-  // 4. Coding — small implementation (arrays / loop)
+  // Q4 — Coding: max element in array (basic implementation)
   {
     id: "q4",
     concept: "arrays",
     kind: "coding",
     language: "python",
     prompt:
-      "Write a function `count_positive(nums)` that returns the number of strictly positive integers in the list `nums`. You may assume `nums` is a list of integers (possibly empty).",
-    starter: "def count_positive(nums):\n    # your code here\n    pass\n",
+      "Write a function `find_max(nums)` that returns the maximum element in the list `nums`.\n\nExample:\nInput: [3, 1, 7, 2]\nOutput: 7\n\nYou may assume `nums` has at least one element.",
+    starter: "def find_max(nums):\n    # your code here\n    pass\n",
     referenceAnswer:
-      "def count_positive(nums):\n    count = 0\n    for x in nums:\n        if x > 0:\n            count += 1\n    return count",
+      "def find_max(nums):\n    best = nums[0]\n    for x in nums[1:]:\n        if x > best:\n            best = x\n    return best",
   },
 
-  // 5. Coding — recursion
+  // Q5 — Coding: consecutive pair sum > 100 (adjacency / pattern lite)
   {
     id: "q5",
-    concept: "recursion",
+    concept: "two-pointers",
     kind: "coding",
     language: "python",
     prompt:
-      "Write a recursive function `sum_to(n)` that returns 1 + 2 + ... + n for a non-negative integer n. It must be recursive (no loops). Define the base case yourself.",
-    starter: "def sum_to(n):\n    # your code here\n    pass\n",
+      "Given a list of integers `nums`, return True if there exist two CONSECUTIVE numbers whose sum is greater than 100, otherwise return False.\n\nExample:\nInput: [10, 60, 50, 20]\nOutput: True   (because 60 + 50 > 100)\n\nIf the list has fewer than 2 elements, return False.",
+    starter: "def has_consecutive_big_sum(nums):\n    # your code here\n    pass\n",
     referenceAnswer:
-      "def sum_to(n):\n    if n <= 0:\n        return 0\n    return n + sum_to(n - 1)",
+      "def has_consecutive_big_sum(nums):\n    for i in range(len(nums) - 1):\n        if nums[i] + nums[i + 1] > 100:\n            return True\n    return False",
   },
 ];
