@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { CodeEditor } from "@/components/CodeEditor";
 import { ConceptBadge, DifficultyBadge } from "@/components/Badges";
 import { getProblem, PROBLEMS } from "@/data/problems";
 import { CONCEPT_LABELS, type Language } from "@/lib/types";
