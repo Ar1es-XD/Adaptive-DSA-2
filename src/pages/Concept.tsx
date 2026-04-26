@@ -128,7 +128,7 @@ const ArrayViz = forwardRef<VisualizerHandle>((_, ref) => {
 // ─── TWO POINTERS VISUALIZATION ───────────────────────────────────────────────
 const TwoPointerViz = forwardRef<VisualizerHandle>((_, ref) => {
   const nums = [1, 3, 5, 7, 9, 11, 13];
-  const target = 14;
+  const target = 18;
   const [left, setLeft] = useState(0);
   const [right, setRight] = useState(nums.length - 1);
   const [found, setFound] = useState(false);
@@ -412,6 +412,7 @@ const StackViz = forwardRef<VisualizerHandle>((_, ref) => {
   const [items, setItems] = useState<string[]>(["A", "B"]);
   const [action, setAction] = useState<"push" | "pop" | "idle">("idle");
   const [activeLine, setActiveLine] = useState(0);
+  const [running, setRunning] = useState(false);
   
   const code = [
     "stack = []",
@@ -420,7 +421,17 @@ const StackViz = forwardRef<VisualizerHandle>((_, ref) => {
     "stack.pop() # LIFO"
   ];
 
-  useImperativeHandle(ref, () => ({ run: () => { pop(); } }));
+  useImperativeHandle(ref, () => ({ run: () => { setRunning(true); } }));
+
+  useEffect(() => {
+    if (running) {
+      // Auto sequence: Push C, then Pop C
+      const timer1 = setTimeout(() => push(), 500);
+      const timer2 = setTimeout(() => pop(), 1500);
+      const timer3 = setTimeout(() => setRunning(false), 2500);
+      return () => { clearTimeout(timer1); clearTimeout(timer2); clearTimeout(timer3); };
+    }
+  }, [running]);
 
   const push = () => {
     if (items.length >= 6) return;
@@ -477,6 +488,7 @@ const HashMapViz = forwardRef<VisualizerHandle>((_, ref) => {
   const [inputK, setInputK] = useState("name");
   const [inputV, setInputV] = useState("algora");
   const [activeLine, setActiveLine] = useState(0);
+  const [running, setRunning] = useState(false);
   const size = 8;
 
   const code = [
@@ -485,7 +497,7 @@ const HashMapViz = forwardRef<VisualizerHandle>((_, ref) => {
     "hash_map[index] = value"
   ];
   
-  useImperativeHandle(ref, () => ({ run: insert }));
+  useImperativeHandle(ref, () => ({ run: () => { setRunning(true); insert(); setTimeout(() => setRunning(false), 1000); } }));
 
   const insert = () => {
     setActiveLine(1);
@@ -532,6 +544,7 @@ const BinarySearchViz = forwardRef<VisualizerHandle>((_, ref) => {
   const [l, setL] = useState(0);
   const [r, setR] = useState(nums.length - 1);
   const [step, setStep] = useState(0);
+  const [running, setRunning] = useState(false);
   const mid = Math.floor((l + r) / 2);
   
   const code = [
@@ -544,12 +557,25 @@ const BinarySearchViz = forwardRef<VisualizerHandle>((_, ref) => {
 
   const getLine = () => {
     if (nums[mid] === target) return 2;
-    if (step === 0) return 0;
+    if (step === 0 && !running) return 0;
     if (nums[mid] < target) return 3;
     return 4;
   };
 
-  useImperativeHandle(ref, () => ({ run: next }));
+  useImperativeHandle(ref, () => ({ run: () => { reset(); setRunning(true); } }));
+
+  useEffect(() => {
+    if (running) {
+      const interval = setInterval(() => {
+        if (nums[mid] === target) {
+          setRunning(false);
+          return;
+        }
+        next();
+      }, 1200);
+      return () => clearInterval(interval);
+    }
+  }, [running, mid]);
 
   const next = () => {
     if (nums[mid] === target) return;
@@ -601,6 +627,7 @@ const StringsViz = forwardRef<VisualizerHandle>((_, ref) => {
   const pattern = "POW";
   const [offset, setOffset] = useState(0);
   const [found, setFound] = useState(false);
+  const [running, setRunning] = useState(false);
   
   const code = [
     "for i in range(len(text) - len(pattern) + 1):",
@@ -609,7 +636,20 @@ const StringsViz = forwardRef<VisualizerHandle>((_, ref) => {
     "return False"
   ];
 
-  useImperativeHandle(ref, () => ({ run: shift }));
+  useImperativeHandle(ref, () => ({ run: () => { setOffset(0); setFound(false); setRunning(true); } }));
+
+  useEffect(() => {
+    if (running) {
+      const interval = setInterval(() => {
+        if (found || offset >= text.length - pattern.length) {
+          setRunning(false);
+          return;
+        }
+        shift();
+      }, 600);
+      return () => clearInterval(interval);
+    }
+  }, [running, offset, found]);
 
   const shift = () => {
     if (offset >= text.length - pattern.length) { setOffset(0); setFound(false); return; }
