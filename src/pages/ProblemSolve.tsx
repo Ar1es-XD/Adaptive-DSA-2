@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
-import { AppHeader } from "@/components/AppHeader";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -70,8 +70,7 @@ const ProblemSolve = () => {
 
   if (!problem) {
     return (
-      <div className="min-h-screen bg-background">
-        <AppHeader />
+      <div className="bg-background h-full">
         <main className="container py-10"><p>Problem not found.</p></main>
       </div>
     );
@@ -204,8 +203,7 @@ const ProblemSolve = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader />
+    <div className="bg-background h-full">
       <main className="container max-w-7xl py-8">
         {/* Why this problem — quiet inline strip */}
         <div className="mb-8 flex items-center gap-3 text-sm">
@@ -279,24 +277,24 @@ const ProblemSolve = () => {
                 language={language}
                 height={420}
               />
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center gap-3 pt-2">
                 <Button
                   onClick={handleRun}
                   disabled={running || evaluating}
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="text-foreground/80 hover:bg-secondary/60"
+                  className="h-10 px-5 rounded-xl border-2 border-foreground font-bold text-sm hover:bg-secondary transition-all"
                 >
-                  {running ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Play className="mr-1.5 h-3.5 w-3.5" />}
+                  {running ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4 text-primary" />}
                   Run
                 </Button>
                 <Button
                   onClick={handleSubmit}
                   disabled={running || evaluating}
                   size="sm"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="h-10 px-5 rounded-xl bg-primary text-primary-foreground border-2 border-foreground font-bold text-sm shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all"
                 >
-                  {evaluating ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Send className="mr-1.5 h-3.5 w-3.5" />}
+                  {evaluating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                   Submit
                 </Button>
                 {result && (

@@ -1,80 +1,98 @@
 export const CONCEPT_CONTENT = {
   arrays: {
     title: "Arrays",
-    intuition:
-      "Arrays store elements in contiguous memory, giving O(1) random access by index. Most array problems revolve around iteration, in-place modification, or building auxiliary structures (prefix sums, hash maps).",
-    whenToUse: [
-      "Sequential access or transformation of a list of values",
-      "When index-based lookup is needed",
-      "Foundation for more advanced patterns: two-pointers, sliding window, prefix sums",
-    ],
-    walkthrough:
-      "Example: sum of an array. Initialize total = 0, iterate over each element, add to total, return total. O(n) time, O(1) extra space.",
-    skeleton: `function process(nums) {
-  let result = 0;
-  for (let i = 0; i < nums.length; i++) {
-    // update result using nums[i]
-  }
-  return result;
-}`,
+    tagline: "Contiguous memory. O(1) access. The foundation of everything.",
+    image: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=1200",
+    complexity: { time: "O(n)", space: "O(1)", access: "O(1)", insert: "O(n)" },
+    intuition: "Arrays store elements in contiguous memory blocks. The CPU can jump to any index instantly using: address = base + (index × element_size). This is why arrays have O(1) random access — no searching, just arithmetic.",
+    whenToUse: ["Sequential access or transformation of a list","Index-based lookup needed","Foundation for two-pointers, sliding window, prefix sums","In-place manipulation to avoid extra space"],
+    walkthrough: "To find the maximum: start max = nums[0]. Walk each element. If nums[i] > max, update. Return max. One pass, O(n) time, O(1) space.",
+    skeleton: `function findMax(nums) {\n  let max = nums[0];\n  for (let i = 1; i < nums.length; i++) {\n    if (nums[i] > max) max = nums[i];\n  }\n  return max;\n}`,
+    keyInsights: ["Memory is contiguous — cache-friendly and fast to iterate","Index 0 is the first element — watch off-by-one errors","Prefix sums give O(1) range-sum queries after O(n) setup","In-place modification avoids O(n) extra space"],
+    commonMistakes: ["Empty array edge case not handled","Off-by-one: loop ends at length or length-1?","Mutating array while reading it in the same pass"],
   },
   "two-pointers": {
     title: "Two Pointers",
-    intuition:
-      "Use two indices that move toward each other (or in the same direction) to inspect pairs/regions of an array in O(n) instead of O(n^2). Works best on sorted arrays or when the relationship between elements is monotonic.",
-    whenToUse: [
-      "Finding pairs/triplets summing to a target in a sorted array",
-      "Palindrome and string comparison problems",
-      "Partitioning / in-place removal (e.g. move zeroes, remove duplicates)",
-    ],
-    walkthrough:
-      "Two Sum (sorted): place left=0, right=n-1. If nums[left]+nums[right] < target, move left++. If >, move right--. Else return the pair. O(n).",
-    skeleton: `function twoPointer(nums, target) {
-  let left = 0, right = nums.length - 1;
-  while (left < right) {
-    const sum = nums[left] + nums[right];
-    if (sum === target) return [left, right];
-    if (sum < target) left++;
-    else right--;
-  }
-  return [-1, -1];
-}`,
+    tagline: "Eliminate nested loops. Move two indices. Achieve O(n).",
+    image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=1200",
+    complexity: { time: "O(n)", space: "O(1)", access: "O(1)", insert: "N/A" },
+    intuition: "Two nested loops compare pairs in O(n²). Two Pointers eliminates this by placing one index at each end and moving them based on a monotonic condition. Because the array is sorted, you always know which direction eliminates a candidate.",
+    whenToUse: ["Pairs summing to target in sorted array","Palindrome and mirror checks","Removing duplicates or zeroes in-place","Partitioning around a pivot"],
+    walkthrough: "Two Sum (sorted): left=0, right=n-1. sum < target → left++ (need bigger). sum > target → right-- (need smaller). sum == target → found! Each step permanently eliminates one candidate: O(n) total.",
+    skeleton: `function twoSum(nums, target) {\n  let left = 0, right = nums.length - 1;\n  while (left < right) {\n    const sum = nums[left] + nums[right];\n    if (sum === target) return [left, right];\n    if (sum < target) left++;\n    else right--;\n  }\n  return [-1, -1];\n}`,
+    keyInsights: ["Only works on sorted arrays (monotonic relationship required)","Pointers never cross — that's the loop invariant","Each step eliminates one candidate permanently","Fast/slow pointer variant detects cycles in linked lists"],
+    commonMistakes: ["Using on unsorted array without sorting first","left <= right instead of left < right processes middle twice","Not handling duplicates when unique pairs required"],
   },
   "sliding-window": {
     title: "Sliding Window",
-    intuition:
-      "Maintain a contiguous window [l, r] over the array/string and slide it forward. Add the new element on the right, remove the old element on the left when a constraint is violated. Avoids recomputation, achieving O(n).",
-    whenToUse: [
-      "Max/min sum or product over a fixed-size subarray",
-      "Longest substring satisfying a constraint (unique chars, at most k distinct, etc.)",
-      "Counting subarrays with a property",
-    ],
-    walkthrough:
-      "Max sum of size k: compute sum of first k elements as window. Then for i=k..n-1: window += nums[i] - nums[i-k]; track max. O(n).",
-    skeleton: `function slidingWindow(nums, k) {
-  let sum = 0, best = 0;
-  for (let i = 0; i < nums.length; i++) {
-    sum += nums[i];
-    if (i >= k) sum -= nums[i - k];
-    if (i >= k - 1) best = Math.max(best, sum);
-  }
-  return best;
-}`,
+    tagline: "Don't recompute. Slide forward. Keep only what matters.",
+    image: "https://images.unsplash.com/photo-1509233725247-49e657c54213?auto=format&fit=crop&q=80&w=1200",
+    complexity: { time: "O(n)", space: "O(1)", access: "O(n)", insert: "N/A" },
+    intuition: "Naive approach recalculates the subarray from scratch each move — O(n×k). Sliding window reuses the previous sum: add one element on the right, drop one on the left. O(1) per slide → O(n) total.",
+    whenToUse: ["Max/min sum of a fixed-size subarray","Longest substring with at most k distinct chars","Smallest subarray with sum ≥ target","Any contiguous range with a constraint"],
+    walkthrough: "Max sum of size k: compute first k elements. For i=k..n-1: sum += nums[i] − nums[i-k]; update max. Total: O(n).",
+    skeleton: `function maxWindowSum(nums, k) {\n  let sum = 0, best = 0;\n  for (let i = 0; i < nums.length; i++) {\n    sum += nums[i];              // add right\n    if (i >= k) sum -= nums[i - k]; // drop left\n    if (i >= k - 1) best = Math.max(best, sum);\n  }\n  return best;\n}`,
+    keyInsights: ["Window defined by left (l) and right (r) pointers","Fixed windows: move both pointers together","Variable windows: expand r greedily, shrink l when constraint violated","HashMap tracks character frequencies in string problems"],
+    commonMistakes: ["Forgetting to subtract the element that left the window","Fixed-window logic on variable-size problems","First valid window is at index k-1, not k"],
   },
   recursion: {
     title: "Recursion",
-    intuition:
-      "Solve a problem by reducing it to a smaller instance of itself. Every recursion needs (1) a base case that stops the chain, (2) a recursive case that makes progress toward the base.",
-    whenToUse: [
-      "Naturally recursive structures: trees, graphs, divide-and-conquer",
-      "Backtracking and combinatorial enumeration",
-      "Problems expressed by recurrences (Fibonacci, factorial, merge sort)",
-    ],
-    walkthrough:
-      "Factorial: base case factorial(0) = 1; recursive case factorial(n) = n * factorial(n-1). Stack depth O(n).",
-    skeleton: `function recurse(n) {
-  if (n <= 0) return /* base value */;
-  return /* combine */ recurse(n - 1);
-}`,
+    tagline: "Reduce to smaller self. Hit base case. Unwind the stack.",
+    image: "https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?auto=format&fit=crop&q=80&w=1200",
+    complexity: { time: "O(2ⁿ) naive / O(n) memoised", space: "O(n) stack", access: "N/A", insert: "N/A" },
+    intuition: "Recursion means a function calling itself with a simpler version of the same problem. Trust: assume the recursive call correctly solves the smaller problem, then combine its result. Every recursion needs (1) a base case that stops the chain and (2) a recursive case that makes progress.",
+    whenToUse: ["Tree/graph traversal — naturally recursive","Divide-and-conquer: merge sort, binary search","Backtracking: permutations, subsets","Recurrence-based: fib(n) = fib(n-1) + fib(n-2)"],
+    walkthrough: "factorial(4): calls factorial(3)...down to factorial(0)=1 (base). Unwinds: 1×1=1, 2×1=2, 3×2=6, 4×6=24. Stack grows on calls, shrinks on returns.",
+    skeleton: `function recurse(n) {\n  // 1. Base case\n  if (n <= 0) return 1;\n  // 2. Trust the smaller call\n  const sub = recurse(n - 1);\n  // 3. Combine\n  return n * sub;\n}`,
+    keyInsights: ["Call stack holds every unresolved frame — O(depth) memory","Always define base case first; missing it causes stack overflow","Visualise as a tree: each call spawns children, leaves are base cases","Memoisation converts O(2ⁿ) to O(n) by caching results"],
+    commonMistakes: ["Missing/wrong base case → infinite recursion → stack overflow","Modifying shared state without backtracking","Forgetting each frame has its own local variable copies"],
+  },
+  "hash-map": {
+    title: "Hash Map",
+    tagline: "Trade space for time. O(1) lookup. No more nested loops.",
+    image: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&q=80&w=1200",
+    complexity: { time: "O(n)", space: "O(n)", access: "O(1) avg", insert: "O(1) avg" },
+    intuition: "A hash map converts a key into an array index via a hash function, enabling O(1) average-case lookup. Instead of scanning the whole array to check if a value exists (O(n)), you store it in the map and query instantly. This turns many O(n²) brute-force solutions into O(n).",
+    whenToUse: ["Counting frequencies of elements","Checking if a complement exists (Two Sum)","Caching/memoising results","Grouping elements by a computed key (anagrams)"],
+    walkthrough: "Two Sum: iterate the array. For each nums[i], check if (target - nums[i]) is already in the map. If yes — found the pair. If not, store nums[i] → i in the map. One pass, O(n).",
+    skeleton: `function twoSum(nums, target) {\n  const map = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (map.has(complement)) return [map.get(complement), i];\n    map.set(nums[i], i);\n  }\n  return [];\n}`,
+    keyInsights: ["Hash collisions are rare with a good hash function — treat as O(1)","Keys must be hashable — objects/arrays need serialisation","Use Map over plain object in JS for non-string keys","Frequency maps solve most 'count occurrences' problems trivially"],
+    commonMistakes: ["Assuming insertion order is preserved (it is in JS Map, not always elsewhere)","Not handling the case where the same element is used twice","Forgetting to initialise frequency counters to 0"],
+  },
+  stack: {
+    title: "Stack",
+    tagline: "Last in, first out. Track history. Undo anything.",
+    image: "https://images.unsplash.com/photo-1589998059171-988d887df646?auto=format&fit=crop&q=80&w=1200",
+    complexity: { time: "O(n)", space: "O(n)", access: "O(n)", insert: "O(1)" },
+    intuition: "A stack is a LIFO (Last In, First Out) structure. Think of a stack of plates — you can only take from the top. This makes it perfect for problems involving matching pairs (brackets), tracking the most recent unresolved state, or processing elements in reverse order.",
+    whenToUse: ["Matching brackets or tags (Valid Parentheses)","Next Greater Element problems","Expression evaluation and parsing","Undo/redo operations, call stack simulation"],
+    walkthrough: "Valid Parentheses: iterate each character. If it's an open bracket, push to stack. If it's a closing bracket, check if stack top is the matching open bracket — pop if yes, return false if not. At the end, stack should be empty.",
+    skeleton: `function isValid(s) {\n  const stack = [];\n  const map = { ')': '(', ']': '[', '}': '{' };\n  for (const c of s) {\n    if ('([{'.includes(c)) stack.push(c);\n    else if (stack.pop() !== map[c]) return false;\n  }\n  return stack.length === 0;\n}`,
+    keyInsights: ["A monotonic stack maintains elements in increasing or decreasing order — powerful for range queries","Stack naturally reverses order — useful for palindrome checks","The call stack in your programming language is itself a stack","When you need 'what was the last X we saw', reach for a stack"],
+    commonMistakes: ["Not checking if stack is empty before popping (causes index error)","Forgetting to check stack is empty at the end of traversal","Using a queue (FIFO) when you need a stack (LIFO)"],
+  },
+  "binary-search": {
+    title: "Binary Search",
+    tagline: "Halve the search space. O(log n). Don't scan what you can skip.",
+    image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&q=80&w=1200",
+    complexity: { time: "O(log n)", space: "O(1)", access: "O(log n)", insert: "N/A" },
+    intuition: "Binary search works on sorted data. At each step, compare the middle element to the target. Because the array is sorted, if the middle is too big, the answer must be on the left half — discard the right. Each step halves the search space, giving O(log n) instead of O(n).",
+    whenToUse: ["Searching in a sorted array","Finding boundaries: first/last occurrence","Search in rotated sorted array","Optimisation problems: minimise the maximum, find the smallest valid value"],
+    walkthrough: "Search for target: lo=0, hi=n-1. Mid = (lo+hi)/2. If nums[mid] == target: return mid. If nums[mid] < target: lo = mid+1 (search right). Else: hi = mid-1 (search left). Repeat until lo > hi.",
+    skeleton: `function search(nums, target) {\n  let lo = 0, hi = nums.length - 1;\n  while (lo <= hi) {\n    const mid = Math.floor((lo + hi) / 2);\n    if (nums[mid] === target) return mid;\n    if (nums[mid] < target) lo = mid + 1;\n    else hi = mid - 1;\n  }\n  return -1;\n}`,
+    keyInsights: ["Use lo + (hi - lo) / 2 to prevent integer overflow in C++/Java","lo <= hi (not <) ensures the single-element case is handled","Binary search on the answer: if f(x) is monotone, binary search for the boundary","Rotated array problems split into two sorted halves — identify which half is sorted"],
+    commonMistakes: ["Using lo < hi and missing the last element","Infinite loop when lo/hi update doesn't move (e.g., mid = lo when lo+1=hi)","Not handling the empty array edge case"],
+  },
+  strings: {
+    title: "Strings",
+    tagline: "Characters in sequence. Pattern match. Parse. Transform.",
+    image: "https://images.unsplash.com/photo-1474932430478-367dbb6832c1?auto=format&fit=crop&q=80&w=1200",
+    complexity: { time: "O(n)", space: "O(n)", access: "O(1)", insert: "O(n)" },
+    intuition: "Strings are arrays of characters, but most languages treat them as immutable — every 'modification' creates a new string. This means naive string concatenation in a loop is O(n²). The key is building results in character arrays or using frequency maps to analyse content without recreating strings.",
+    whenToUse: ["Anagram and permutation checks (frequency map)","Palindrome verification (two pointers)","Substring search and pattern matching","Parsing: split, trim, tokenise"],
+    walkthrough: "Valid Anagram: count frequency of each character in s using a map. Then for each character in t, decrement the count. If any count goes negative, t has a character s doesn't — return false. O(n) time, O(1) space (26 letters).",
+    skeleton: `function isAnagram(s, t) {\n  if (s.length !== t.length) return false;\n  const count = {};\n  for (const c of s) count[c] = (count[c] || 0) + 1;\n  for (const c of t) {\n    if (!count[c]) return false;\n    count[c]--;\n  }\n  return true;\n}`,
+    keyInsights: ["Strings are immutable in most languages — build a char array, join at the end","Sorting a string gives its character signature — equal signatures = anagram","Two-pointer approach handles palindrome checks in O(n) time, O(1) space","Sliding window solves 'longest substring with property X' problems"],
+    commonMistakes: ["String concatenation in a loop: O(n²) — use array.join() instead","Not handling case sensitivity and spaces in palindrome problems","Forgetting that s.length !== t.length is an instant anagram check"],
   },
 } as const;

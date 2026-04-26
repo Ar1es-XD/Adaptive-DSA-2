@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AppHeader } from "@/components/AppHeader";
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { CodeEditor } from "@/components/CodeEditor";
 import { DIAGNOSTIC_QUESTIONS } from "@/data/diagnostic";
 import { useTutorStore } from "@/lib/store";
-import { CONCEPTS, type Concept, type DiagnosticEvaluation, type Language } from "@/lib/types";
+import { CONCEPTS, CONCEPT_LABELS, type Concept, type DiagnosticEvaluation, type Language } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -15,24 +14,19 @@ import {
   ArrowRight,
   Brain,
   Code2,
-  Lightbulb,
   Loader2,
-  CheckCircle2,
-  XCircle,
   AlertCircle,
   Sparkles,
+  Timer,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
-
-// ---------- helpers ----------
 
 const phaseMeta = {
   logical: { label: "Logical reasoning", icon: Brain },
-  conceptual: { label: "Concept understanding", icon: Lightbulb },
+  conceptual: { label: "Concept understanding", icon: Brain },
   coding: { label: "Coding", icon: Code2 },
 } as const;
-
-const understandingLabel = (u: DiagnosticEvaluation["understanding"]) =>
-  u === "high" ? "Strong" : u === "medium" ? "Solid" : "Basic";
 
 const understandingScore = (u: DiagnosticEvaluation["understanding"]) =>
   u === "high" ? 100 : u === "medium" ? 60 : 20;
@@ -40,24 +34,17 @@ const understandingScore = (u: DiagnosticEvaluation["understanding"]) =>
 const statusToScoreFactor = (s: DiagnosticEvaluation["status"]) =>
   s === "correct" ? 1 : s === "partial" ? 0.55 : 0.2;
 
-// Coding-question placeholder hints (small inline mentor nudge)
-const CODING_HINTS: Record<string, string> = {
-  q4: "// Think about how you'd track the current maximum as you walk through the list",
-  q5: "// Try walking through pairs (i, i+1) — what's the simplest check?",
-};
-
-const CODING_SUBLABEL: Record<string, string> = {
-  q4: "Tests basic iteration and tracking a running value.",
-  q5: "Tests pair iteration and a simple condition.",
-};
-
-// ---------- component ----------
-
 const Diagnostic = () => {
   const navigate = useNavigate();
   const setDiagnostic = useTutorStore((s) => s.setDiagnostic);
+  const incrementDiagnosticRound = useTutorStore((s) => s.incrementDiagnosticRound);
+  const diagnosticDone = useTutorStore((s) => s.diagnosticDone);
+  const diagnosticRounds = useTutorStore((s) => s.diagnosticRounds);
+  const profile = useTutorStore((s) => s.profile);
+  const isRetest = diagnosticDone; // already completed at least once
 
   const [started, setStarted] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>("python");
   const [idx, setIdx] = useState(0);
   const [answer, setAnswer] = useState("");
   const [reasoning, setReasoning] = useState("");
@@ -65,31 +52,70 @@ const Diagnostic = () => {
   const [evaluations, setEvaluations] = useState<Record<string, DiagnosticEvaluation>>({});
   const [currentEval, setCurrentEval] = useState<DiagnosticEvaluation | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  
+  // Anti-cheat state
+  const [questionStartTime, setQuestionStartTime] = useState<number>(0);
+  const [isCheating, setIsCheating] = useState(false);
+
+  const activeLanguage: Language = q?.kind === "coding" ? selectedLanguage : (q?.language ?? "python");
 
   const q = DIAGNOSTIC_QUESTIONS[idx];
   const isLast = idx === DIAGNOSTIC_QUESTIONS.length - 1;
   const Phase = phaseMeta[q.kind];
   const PhaseIcon = Phase.icon;
 
+  useEffect(() => {
+    if (started) {
+      setQuestionStartTime(Date.now());
+      setIsCheating(false);
+    }
+  }, [idx, started]);
+
   const goToQuestion = (newIdx: number) => {
     const next = DIAGNOSTIC_QUESTIONS[newIdx];
     setIdx(newIdx);
-    setAnswer(next.kind === "coding" ? next.starter ?? "" : "");
+    
+    let defaultStarter = next.starter ?? "";
+    if (next.kind === "coding" && selectedLanguage !== next.language) {
+      const fnMatch = next.prompt.match(/`(\w+)\(/);
+      const fnName = fnMatch ? fnMatch[1] : "solve";
+      
+      if (selectedLanguage === "javascript") {
+        defaultStarter = `function ${fnName}(items) {\n  // your code here\n}`;
+      } else if (selectedLanguage === "java") {
+        defaultStarter = `public class Solution {\n    public void ${fnName}(Object items) {\n        // your code here\n    }\n}`;
+      } else if (selectedLanguage === "cpp") {
+        defaultStarter = `class Solution {\npublic:\n    void ${fnName}(auto items) {\n        // your code here\n    }\n};`;
+      } else if (selectedLanguage === "python") {
+        defaultStarter = `def ${fnName}(items):\n    # your code here\n    pass`;
+      }
+    }
+
+    setAnswer(next.kind === "coding" ? defaultStarter : "");
     setReasoning("");
     setCurrentEval(null);
   };
 
-  // Initialize starter on first coding question
   useEffect(() => {
     if (started && q.kind === "coding" && answer === "") setAnswer(q.starter ?? "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [started]);
+  }, [started, q, answer]);
 
   const canEvaluate =
     answer.trim().length > 1 && (q.kind === "coding" || reasoning.trim().length > 1);
 
   const evaluate = async () => {
     if (!canEvaluate) return;
+    
+    // Cheat detection: submit in < 5 seconds
+    const timeTaken = (Date.now() - questionStartTime) / 1000;
+    if (timeTaken < 5) {
+      setIsCheating(true);
+      toast.warning("Submission too fast! Take a moment to think deeper.", {
+        icon: <ShieldAlert className="h-5 w-5 text-warning" />
+      });
+      return;
+    }
+
     setEvaluating(true);
     try {
       const { data, error } = await supabase.functions.invoke("evaluate-diagnostic", {
@@ -101,11 +127,12 @@ const Diagnostic = () => {
           referenceReasoning: q.referenceReasoning,
           userAnswer: answer,
           userReasoning: q.kind === "coding" ? "" : reasoning,
-          language: q.language,
+          language: activeLanguage,
         },
       });
       if (error) throw error;
       if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      
       const evalResult = data as DiagnosticEvaluation;
       setCurrentEval(evalResult);
       setEvaluations((prev) => ({ ...prev, [q.id]: evalResult }));
@@ -133,8 +160,12 @@ const Diagnostic = () => {
       acc[c] = sums[c].count > 0 ? Math.round(sums[c].total / sums[c].count) : 50;
       return acc;
     }, {} as Record<Concept, number>);
-    setDiagnostic(scores);
-    navigate("/profile");
+    if (isRetest) {
+      incrementDiagnosticRound(scores);
+    } else {
+      setDiagnostic(scores);
+    }
+    navigate("/diagnostic-result");
   };
 
   const next = () => {
@@ -142,238 +173,228 @@ const Diagnostic = () => {
     else goToQuestion(idx + 1);
   };
 
-  // ---------- intro ----------
-
   if (!started) {
+    const weakAreas = isRetest
+      ? [...CONCEPTS].sort((a, b) => profile.scores[a] - profile.scores[b]).slice(0, 3)
+      : [];
+
     return (
-      <div className="min-h-screen bg-background">
-        <AppHeader />
-        <main className="container max-w-xl py-24">
-          <div className="fade-in space-y-8">
-            <div className="space-y-3">
-              <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                Diagnostic
-              </div>
-              <h1 className="text-3xl font-medium tracking-tight">
-                A short look at how you think.
-              </h1>
-              <p className="text-muted-foreground">
-                Five questions, about two minutes. No trick questions — we're just calibrating
-                what to show you next.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              {(["logical", "conceptual", "coding"] as const).map((k) => {
-                const M = phaseMeta[k];
-                const Icon = M.icon;
-                return (
-                  <div key={k} className="flex items-center gap-3 text-sm">
-                    <Icon className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-foreground/80">{M.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            <Button
-              size="lg"
-              onClick={() => setStarted(true)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              Begin
-              <ArrowRight className="ml-1.5 h-4 w-4" />
-            </Button>
+      <div className="bg-background min-h-full font-sans flex flex-col items-center justify-center p-6">
+        <div className="container max-w-2xl bg-card border-4 border-foreground rounded-[3rem] p-12 shadow-[12px_12px_0_0_rgba(0,0,0,1)] text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-[60px] pointer-events-none" />
+          <div className="h-20 w-20 bg-primary rounded-3xl flex items-center justify-center text-white border-2 border-foreground shadow-[4px_4px_0_0_rgba(0,0,0,1)] mx-auto mb-10 rotate-3">
+            <Sparkles className="h-10 w-10" />
           </div>
-        </main>
+
+          {isRetest ? (
+            <>
+              <div className="text-sm font-black uppercase tracking-[0.3em] text-primary mb-6">
+                Recalibration · Round {diagnosticRounds + 1}
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter font-pixel uppercase mb-6 leading-tight">
+                Sharpen your <span className="text-primary">edge</span>
+              </h1>
+              <p className="text-lg text-muted-foreground font-medium mb-8 leading-relaxed">
+                This session targets your current weak areas. Your new score will be <strong className="text-foreground">blended</strong> with your existing profile — each round has less weight, so growth is proportional, not volatile.
+              </p>
+              <div className="flex flex-wrap justify-center gap-3 mb-10">
+                {weakAreas.map(c => (
+                  <span key={c} className="px-4 py-2 bg-primary/10 border-2 border-primary/30 text-primary font-bold text-sm rounded-xl">
+                    {CONCEPT_LABELS[c]} · {profile.scores[c]}%
+                  </span>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-sm font-black uppercase tracking-[0.3em] text-primary mb-6">Heuristic Calibration</div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter font-pixel uppercase mb-8 leading-tight">
+                How do you <span className="text-primary">solve</span>?
+              </h1>
+              <p className="text-xl text-muted-foreground font-medium mb-12 leading-relaxed">
+                10 questions mapping your logic, conceptual grasp, and implementation speed. Algora curates a path tailored to your learning curve.
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-12 text-left">
+                <div className="p-4 bg-secondary rounded-2xl border-2 border-foreground/10 flex items-center gap-3">
+                  <Brain className="h-5 w-5 text-primary" />
+                  <span className="font-bold uppercase tracking-widest text-xs">5 Logic Puzzles</span>
+                </div>
+                <div className="p-4 bg-secondary rounded-2xl border-2 border-foreground/10 flex items-center gap-3">
+                  <Code2 className="h-5 w-5 text-primary" />
+                  <span className="font-bold uppercase tracking-widest text-xs">5 Coding Tasks</span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Language Picker */}
+          <div className="mb-10 text-left">
+            <label className="text-xs font-black uppercase tracking-widest text-foreground/70 mb-4 block text-center">Select Preferred Language</label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-lg mx-auto">
+              {(["python", "javascript", "cpp", "java"] as const).map(lang => (
+                <button
+                  key={lang}
+                  onClick={() => setSelectedLanguage(lang)}
+                  className={cn(
+                    "px-4 py-3 rounded-xl border-4 font-bold uppercase text-xs tracking-wider transition-all",
+                    selectedLanguage === lang 
+                      ? "bg-primary text-white border-foreground shadow-[4px_4px_0_0_rgba(0,0,0,1)]" 
+                      : "bg-card border-foreground/10 hover:border-foreground/30"
+                  )}
+                >
+                  {lang === "cpp" ? "C++" : lang}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <Button
+            size="lg"
+            onClick={() => setStarted(true)}
+            className="h-16 px-12 rounded-2xl bg-primary text-primary-foreground font-bold text-xl shadow-[6px_6px_0_0_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all border-2 border-foreground"
+          >
+            {isRetest ? `Start Recalibration` : "Start Diagnostic"} <ArrowRight className="ml-3 h-6 w-6" />
+          </Button>
+        </div>
       </div>
     );
   }
 
-  // ---------- phased progress ----------
-
-  const phases = [
-    { key: "logical" as const, count: DIAGNOSTIC_QUESTIONS.filter((x) => x.kind === "logical").length },
-    { key: "conceptual" as const, count: DIAGNOSTIC_QUESTIONS.filter((x) => x.kind === "conceptual").length },
-    { key: "coding" as const, count: DIAGNOSTIC_QUESTIONS.filter((x) => x.kind === "coding").length },
-  ];
-
-  const completedPerPhase = phases.map((p) => {
-    const inPhase = DIAGNOSTIC_QUESTIONS.filter((x) => x.kind === p.key);
-    const completed = inPhase.filter((x, i) => {
-      const globalIdx = DIAGNOSTIC_QUESTIONS.findIndex((q) => q.id === x.id);
-      return globalIdx < idx || (globalIdx === idx && currentEval);
-    }).length;
-    return { ...p, completed };
-  });
-
-  // ---------- question screen ----------
-
   return (
-    <div className="min-h-screen bg-background">
-      <AppHeader />
-      <main className="container max-w-2xl py-12">
-        {/* Phased progress — slim, calm */}
-        <div className="mb-12">
-          <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Question {idx + 1} of {DIAGNOSTIC_QUESTIONS.length}</span>
-            <span className="inline-flex items-center gap-1.5">
-              <PhaseIcon className="h-3 w-3" />
-              {Phase.label}
-            </span>
+    <div className="min-h-full bg-background font-sans py-12">
+      <main className="container max-w-4xl">
+        {/* Progress Bar */}
+        <div className="mb-16">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-foreground text-background font-pixel px-3 py-1 rounded-lg text-xs">
+                {idx + 1}/{DIAGNOSTIC_QUESTIONS.length}
+              </div>
+              <div className="text-sm font-black uppercase tracking-[0.2em]">{Phase.label}</div>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Timer className="h-4 w-4" />
+              <span className="text-xs font-bold uppercase tracking-widest">Live Session</span>
+            </div>
           </div>
-          <div className="flex gap-1.5">
-            {completedPerPhase.map((p) => {
-              const pct = (p.completed / p.count) * 100;
-              const isActive = q.kind === p.key;
-              return (
-                <div key={p.key} className="h-0.5 flex-1 overflow-hidden rounded-full bg-border/60">
-                  <div
-                    className={cn(
-                      "h-full transition-all duration-500 ease-out",
-                      pct === 100 ? "bg-success" : isActive ? "bg-primary" : "bg-transparent",
-                    )}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              );
-            })}
+          <div className="h-6 w-full bg-muted border-4 border-foreground rounded-full overflow-hidden shadow-inner">
+            <div 
+              className="h-full bg-primary transition-all duration-700 ease-out border-r-4 border-foreground" 
+              style={{ width: `${((idx + 1) / DIAGNOSTIC_QUESTIONS.length) * 100}%` }} 
+            />
           </div>
         </div>
 
-        {/* Question — flows vertically, no card chrome */}
-        <div className="fade-in space-y-8">
-          <h2 className="text-xl font-normal leading-relaxed text-foreground/95 whitespace-pre-line">
-            {q.prompt}
-          </h2>
+        {/* Question Area */}
+        <div className="space-y-12">
+          <div className="bg-card border-4 border-foreground rounded-[3rem] p-12 shadow-[12px_12px_0_0_rgba(0,0,0,1)] relative overflow-hidden">
+            <h2 className="text-2xl md:text-3xl font-bold leading-relaxed text-foreground whitespace-pre-line mb-10">
+              {q.prompt}
+            </h2>
 
-          {q.kind === "coding" ? (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Your code · {q.language}</span>
-                <span>{CODING_SUBLABEL[q.id] ?? "We're looking at your approach."}</span>
+            {q.kind === "coding" ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between text-xs font-black uppercase tracking-widest text-muted-foreground mb-2">
+                  <span>Implementation Area ({activeLanguage})</span>
+                </div>
+                <div className="rounded-[1.5rem] border-4 border-foreground overflow-hidden shadow-[6px_6px_0_0_rgba(0,0,0,0.1)]">
+                  <CodeEditor
+                    value={answer}
+                    onChange={setAnswer}
+                    language={activeLanguage}
+                    height={350}
+                  />
+                </div>
               </div>
-              <CodeEditor
-                value={answer}
-                onChange={setAnswer}
-                language={(q.language as Language) ?? "python"}
-                height={280}
-              />
-              {CODING_HINTS[q.id] && (
-                <p className="font-mono text-xs text-muted-foreground/70">
-                  {CODING_HINTS[q.id]}
-                </p>
+            ) : (
+              <div className="space-y-8">
+                <div>
+                  <label className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-4 block">Explain your thinking</label>
+                  <Textarea
+                    value={reasoning}
+                    onChange={(e) => setReasoning(e.target.value)}
+                    placeholder="Walk us through your logic. Intuition is more valuable than the final answer."
+                    className="min-h-[160px] text-lg rounded-2xl border-4 border-foreground bg-secondary/30 p-6 focus-visible:ring-0 shadow-inner"
+                    disabled={evaluating || !!currentEval}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-4 block">Final Conclusion</label>
+                  <Textarea
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    placeholder="Briefly summarize your answer."
+                    className="min-h-[80px] text-lg rounded-2xl border-4 border-foreground bg-secondary/30 p-6 focus-visible:ring-0 shadow-inner"
+                    disabled={evaluating || !!currentEval}
+                  />
+                </div>
+              </div>
+            )}
+
+            {isCheating && (
+              <div className="mt-8 p-6 bg-warning/10 border-4 border-warning rounded-2xl flex items-center gap-4 text-warning animate-shake">
+                <AlertCircle className="h-8 w-8 shrink-0" />
+                <div>
+                  <div className="font-black uppercase tracking-widest text-sm">Caution: Rapid Submission</div>
+                  <p className="font-bold opacity-80">Algora values depth over speed. Please take at least 5 seconds to process the problem.</p>
+                </div>
+              </div>
+            )}
+
+            {currentEval && (
+              <div className={cn(
+                "mt-12 p-10 rounded-[2.5rem] border-4 border-foreground shadow-[8px_8px_0_0_rgba(0,0,0,0.1)]",
+                currentEval.status === "correct" ? "bg-green-50/50" : "bg-orange-50/50"
+              )}>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className={cn(
+                    "h-4 w-4 rounded-full border-2 border-foreground animate-pulse",
+                    currentEval.status === "correct" ? "bg-green-500" : "bg-orange-500"
+                  )} />
+                  <span className="font-black uppercase tracking-[0.2em] text-sm">Analysis Complete</span>
+                </div>
+                <p className="text-xl font-bold leading-relaxed mb-6">{currentEval.feedback}</p>
+                <div className="flex gap-4">
+                  <div className="px-4 py-2 bg-foreground text-background rounded-xl font-pixel text-[10px] uppercase">
+                    {currentEval.understanding} GRASP
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end mt-12">
+              {!currentEval ? (
+                <Button
+                  size="lg"
+                  onClick={evaluate}
+                  disabled={!canEvaluate || evaluating}
+                  className="h-16 px-12 rounded-2xl bg-foreground text-background font-bold text-lg hover:bg-foreground/90 transition-all border-4 border-foreground shadow-[6px_6px_0_0_rgba(0,0,0,0.3)]"
+                >
+                  {evaluating ? (
+                    <>
+                      <Loader2 className="mr-3 h-6 w-6 animate-spin" /> Analyzing Logic
+                    </>
+                  ) : (
+                    <>
+                      Process Submission <ArrowRight className="ml-3 h-6 w-6" />
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  onClick={next}
+                  disabled={submitting}
+                  className="h-16 px-12 rounded-2xl bg-primary text-primary-foreground font-bold text-xl hover:bg-primary/90 transition-all border-4 border-foreground shadow-[6px_6px_0_0_rgba(0,0,0,1)]"
+                >
+                  {isLast ? "See Final Results" : "Next Challenge"}
+                  <ArrowRight className="ml-3 h-6 w-6" />
+                </Button>
               )}
             </div>
-          ) : (
-            <div className="space-y-6">
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-wider text-muted-foreground">
-                  Your thinking
-                </label>
-                <Textarea
-                  value={reasoning}
-                  onChange={(e) => setReasoning(e.target.value)}
-                  placeholder="Walk through how you got there. The intuition matters most."
-                  className="min-h-[120px] resize-y border-border/40 bg-card/30 text-base leading-relaxed focus-visible:ring-1 focus-visible:ring-primary/40"
-                  disabled={evaluating || !!currentEval}
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-xs uppercase tracking-wider text-muted-foreground">
-                  Short answer
-                </label>
-                <Textarea
-                  value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
-                  placeholder="A one-liner conclusion."
-                  className="min-h-[60px] resize-y border-border/40 bg-card/30 text-sm focus-visible:ring-1 focus-visible:ring-primary/40"
-                  disabled={evaluating || !!currentEval}
-                />
-              </div>
-            </div>
-          )}
-
-          {currentEval && <InlineFeedback ev={currentEval} />}
-
-          <div className="flex justify-end pt-2">
-            {!currentEval ? (
-              <Button
-                onClick={evaluate}
-                disabled={!canEvaluate || evaluating}
-                variant="ghost"
-                className="text-foreground/80 hover:bg-secondary/60 hover:text-foreground"
-              >
-                {evaluating ? (
-                  <>
-                    <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Reviewing
-                  </>
-                ) : (
-                  "Submit"
-                )}
-              </Button>
-            ) : (
-              <Button
-                onClick={next}
-                disabled={submitting}
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {isLast ? "See your profile" : "Next"}
-                <ArrowRight className="ml-1 h-4 w-4" />
-              </Button>
-            )}
           </div>
         </div>
       </main>
-    </div>
-  );
-};
-
-// ---------- evaluation panel ----------
-
-// Inline feedback: dot + 1–2 line response, no card chrome
-const statusMeta = {
-  correct:   { label: "Correct",        dotClass: "status-dot-correct",   textClass: "text-success" },
-  partial:   { label: "Almost there",   dotClass: "status-dot-partial",   textClass: "text-warning" },
-  incorrect: { label: "Needs work",     dotClass: "status-dot-incorrect", textClass: "text-destructive" },
-} as const;
-
-const InlineFeedback = ({ ev }: { ev: DiagnosticEvaluation }) => {
-  const M = statusMeta[ev.status];
-  return (
-    <div
-      className={cn(
-        "slide-in space-y-3 border-l-2 pl-4 py-1",
-        ev.status === "correct" && "border-success/60",
-        ev.status === "partial" && "border-warning/60",
-        ev.status === "incorrect" && "border-destructive/60",
-      )}
-    >
-      <div className="flex items-center gap-2.5">
-        <span className={cn("status-dot", M.dotClass)} />
-        <span className={cn("text-sm font-medium", M.textClass)}>{M.label}</span>
-        <span className="text-xs text-muted-foreground">
-          · {understandingLabel(ev.understanding)} understanding
-        </span>
-      </div>
-
-      <p className="text-[15px] leading-relaxed text-foreground/85">{ev.feedback}</p>
-
-      {(ev.didWell || (ev.missing && ev.status !== "correct")) && (
-        <div className="space-y-1.5 text-sm">
-          {ev.didWell && (
-            <p className="text-muted-foreground">
-              <span className="text-success">+ </span>{ev.didWell}
-            </p>
-          )}
-          {ev.missing && ev.status !== "correct" && (
-            <p className="text-muted-foreground">
-              <span className="text-warning">→ </span>{ev.missing}
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 };

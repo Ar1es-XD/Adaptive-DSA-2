@@ -2,77 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
-/* DSA Tutor — calm, focused training environment. All colors HSL. */
-
 @layer base {
   :root {
-    /* Deeper, quieter base */
-    --background: 222 22% 5%;        /* ~#0B0D12 */
-    --foreground: 210 18% 92%;
+    /* Flat "Art Course" Aesthetic */
+    --background: 39 50% 94%;      /* Cream #f8f1e6 */
+    --foreground: 0 0% 0%;         /* Pure Black #000000 */
 
-    /* Surfaces sit very close to bg — minimal contrast */
-    --card: 222 20% 7%;
-    --card-foreground: 210 18% 92%;
+    --card: 0 0% 100%;             /* Pure White #ffffff */
+    --card-foreground: 0 0% 0%;
 
-    --popover: 222 20% 7%;
-    --popover-foreground: 210 18% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
 
-    /* Accent — used sparingly: correct states + active actions */
-    --primary: 158 70% 48%;
-    --primary-foreground: 222 30% 6%;
-    --primary-glow: 158 80% 58%;
+    --primary: 6 72% 44%;          /* Terracotta Red #bf2f1f */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 16% 11%;
-    --secondary-foreground: 210 18% 92%;
+    --secondary: 0 0% 96%;         /* Slightly off-white for contrast inside cards */
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 222 16% 10%;
-    --muted-foreground: 215 12% 56%;
+    --muted: 39 20% 90%;           /* Darker cream for muted areas */
+    --muted-foreground: 0 0% 30%;
 
-    --accent: 222 16% 12%;
-    --accent-foreground: 210 18% 92%;
+    --accent: 6 72% 44%;           /* Also Terracotta */
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 65% 55%;
-    --destructive-foreground: 210 25% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 88% 58%;
-    --warning-foreground: 222 30% 6%;
+    --border: 39 20% 85%;
+    --input: 39 20% 85%;
+    --ring: 6 72% 44%;
 
-    --success: 158 70% 48%;
-    --success-foreground: 222 30% 6%;
-
-    --info: 200 80% 58%;
-    --info-foreground: 222 30% 6%;
-
-    /* Subtle dividers, not heavy borders */
-    --border: 222 14% 13%;
-    --input: 222 14% 11%;
-    --ring: 158 70% 48%;
-
-    --radius: 0.5rem;
-
-    /* Concept colors — desaturated */
-    --concept-arrays: 200 60% 58%;
-    --concept-two-pointers: 280 50% 65%;
-    --concept-sliding-window: 38 70% 58%;
-    --concept-recursion: 340 55% 65%;
-
-    /* Difficulty */
-    --difficulty-easy: 158 70% 48%;
-    --difficulty-medium: 38 88% 58%;
-    --difficulty-hard: 0 65% 55%;
-
-    /* Gradients (rarely used now) */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(280 50% 65%));
-    --gradient-card: linear-gradient(180deg, hsl(222 20% 7%), hsl(222 20% 6%));
-    --gradient-hero: radial-gradient(ellipse at top, hsl(158 70% 48% / 0.08), transparent 60%);
-
-    /* Soft shadows only */
-    --shadow-glow: 0 0 30px hsl(var(--primary) / 0.15);
-    --shadow-card: 0 1px 0 0 hsl(222 30% 2% / 0.4);
-    --shadow-elevated: 0 8px 24px -16px hsl(222 50% 0% / 0.6);
-
-    --font-mono: ui-monospace, "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+    --radius: 1.5rem; /* Large rounded corners for cards */
+    
+    /* Concept colors - warm palette */
+    --concept-arrays: 6 72% 44%;
+    --concept-two-pointers: 25 80% 50%;
+    --concept-sliding-window: 45 90% 45%;
+    --concept-recursion: 340 70% 50%;
   }
 }
 
@@ -81,68 +48,39 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased;
-    font-feature-settings: "ss01", "cv11";
-    /* Calmer reading rhythm */
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
+    @apply bg-background text-foreground antialiased font-sans;
   }
-  code, pre, .font-mono {
-    font-family: var(--font-mono);
-  }
-  h1, h2, h3, h4 {
-    letter-spacing: -0.01em;
-  }
-  p {
-    line-height: 1.65;
+  /* Import a pixel font from Google Fonts in index.html, but use sans as fallback */
+  .font-pixel {
+    font-family: 'Press Start 2P', 'Courier New', Courier, monospace;
+    text-transform: uppercase;
   }
 }
 
 @layer components {
-  /* Status dot — primary feedback affordance */
+  /* Flat styling replacing glassmorphism */
+  .flat-card {
+    @apply bg-card rounded-[1.5rem] border-2 border-transparent transition-all hover:border-primary/20;
+  }
+  
   .status-dot {
-    @apply inline-block h-2 w-2 rounded-full;
+    @apply inline-block h-3 w-3 rounded-full;
   }
-  .status-dot-correct  { background: hsl(var(--success)); box-shadow: 0 0 0 3px hsl(var(--success) / 0.15); }
-  .status-dot-partial  { background: hsl(var(--warning)); box-shadow: 0 0 0 3px hsl(var(--warning) / 0.12); }
-  .status-dot-incorrect{ background: hsl(var(--destructive)); box-shadow: 0 0 0 3px hsl(var(--destructive) / 0.12); }
-  .status-dot-idle     { background: hsl(var(--muted-foreground) / 0.5); }
+  .status-dot-correct { @apply bg-green-500; }
+  .status-dot-partial { @apply bg-yellow-500; }
+  .status-dot-incorrect{ @apply bg-red-500; }
+  .status-dot-idle { @apply bg-muted-foreground; }
 
-  /* Quiet card — no heavy border, just a hairline */
-  .quiet-card {
-    @apply rounded-lg bg-card/40;
-    border: 1px solid hsl(var(--border) / 0.5);
-  }
-
-  /* Soft highlight for correct moments — used very sparingly */
-  .soft-correct {
-    background: hsl(var(--success) / 0.06);
-    border-color: hsl(var(--success) / 0.25);
-    transition: background-color 400ms ease, border-color 400ms ease;
+  /* Infinite Slider Animation */
+  .slider-track {
+    display: flex;
+    gap: 2rem;
+    animation: scroll 40s linear infinite;
+    width: max-content;
   }
 
-  /* Subtle fade-in for inline feedback */
-  .fade-in {
-    animation: fade-in 220ms ease-out;
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(calc(-50% - 1rem)); }
   }
-  .slide-in {
-    animation: slide-in 240ms ease-out;
-  }
-
-  .gradient-text {
-    color: hsl(var(--foreground));
-    background: none;
-    -webkit-background-clip: initial;
-    background-clip: initial;
-  }
-}
-
-@keyframes fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes slide-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
 }

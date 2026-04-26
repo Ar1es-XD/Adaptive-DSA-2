@@ -54,7 +54,7 @@ export const CodeEditor = ({ value, onChange, language, height = 360 }: CodeEdit
   };
 
   return (
-    <div className="overflow-hidden rounded-md border border-border/60 bg-[#0b1020]">
+    <div className="overflow-hidden h-full w-full rounded-md border border-border/60 bg-[#0b1020]">
       <Editor
         height={height}
         language={LANGUAGE_MAP[language]}

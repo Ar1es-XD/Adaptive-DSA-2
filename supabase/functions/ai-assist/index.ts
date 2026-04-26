@@ -16,8 +16,8 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     const { mode, problem, code, language, result, hintLevel } = body as {
-      mode: "debug" | "hint";
-      problem: { title: string; description: string };
+      mode: "debug" | "hint" | "simulate";
+      problem?: { title: string; description: string };
       code?: string;
       language?: string;
       result?: string;
@@ -30,18 +30,24 @@ Deno.serve(async (req) => {
     let sys = "";
     let user = "";
 
-    if (mode === "debug") {
+    if (mode === "simulate") {
+      sys = `You are a strict, deterministic code execution engine simulator. 
+You must output EXACTLY what the standard output (STDOUT) and standard error (STDERR) of the provided code would be.
+DO NOT provide explanations, reviews, conversational text, or markdown formatting. 
+ONLY output the raw simulated terminal output. If there is a syntax or runtime error, output the exact error message.`;
+      user = `Language: ${language}\nCode:\n\`\`\`${language}\n${code}\n\`\`\`\nSimulate execution.`;
+    } else if (mode === "debug") {
       sys = `You are a DSA tutor in DEBUG mode. The user is stuck. Analyze their code and the result. 
 Output MARKDOWN with EXACTLY these sections:
 ### What's wrong
 ### Where logic fails
 ### How to fix
 STRICT RULE: Do NOT provide a full corrected solution. No complete code blocks. Only short snippets (≤3 lines) when illustrating a fix concept. Be concise.`;
-      user = `Problem: ${problem.title}\n${problem.description}\n\nLanguage: ${language}\nUser code:\n\`\`\`${language}\n${code}\n\`\`\`\n\nResult/verdict: ${result ?? "no run yet"}\n\nDebug it.`;
+      user = `Problem: ${problem?.title}\n${problem?.description}\n\nLanguage: ${language}\nUser code:\n\`\`\`${language}\n${code}\n\`\`\`\n\nResult/verdict: ${result ?? "no run yet"}\n\nDebug it.`;
     } else {
       const lvl = hintLevel ?? 1;
       sys = `You are a DSA tutor in HINT mode. ${HINT_PROMPTS[lvl]} STRICT RULE: NEVER reveal the full solution. NEVER write a complete function body. Output MARKDOWN.`;
-      user = `Problem: ${problem.title}\n${problem.description}\n\nProvide a Level ${lvl} hint only.`;
+      user = `Problem: ${problem?.title}\n${problem?.description}\n\nProvide a Level ${lvl} hint only.`;
     }
 
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

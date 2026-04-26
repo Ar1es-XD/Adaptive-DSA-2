@@ -47,34 +47,17 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        success: { DEFAULT: "hsl(var(--success))", foreground: "hsl(var(--success-foreground))" },
-        warning: { DEFAULT: "hsl(var(--warning))", foreground: "hsl(var(--warning-foreground))" },
-        info: { DEFAULT: "hsl(var(--info))", foreground: "hsl(var(--info-foreground))" },
         concept: {
           arrays: "hsl(var(--concept-arrays))",
           "two-pointers": "hsl(var(--concept-two-pointers))",
           "sliding-window": "hsl(var(--concept-sliding-window))",
           recursion: "hsl(var(--concept-recursion))",
         },
-        difficulty: {
-          easy: "hsl(var(--difficulty-easy))",
-          medium: "hsl(var(--difficulty-medium))",
-          hard: "hsl(var(--difficulty-hard))",
-        },
       },
       fontFamily: {
-        mono: ["var(--font-mono)"],
-      },
-      backgroundImage: {
-        "gradient-primary": "var(--gradient-primary)",
-        "gradient-accent": "var(--gradient-accent)",
-        "gradient-card": "var(--gradient-card)",
-        "gradient-hero": "var(--gradient-hero)",
-      },
-      boxShadow: {
-        glow: "var(--shadow-glow)",
-        card: "var(--shadow-card)",
-        elevated: "var(--shadow-elevated)",
+        sans: ["Inter", "sans-serif"],
+        heading: ["Inter", "sans-serif"],
+        pixel: ["'Press Start 2P'", "Courier New", "monospace"],
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -83,25 +66,22 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.4s ease-out forwards",
       },
     },
   },

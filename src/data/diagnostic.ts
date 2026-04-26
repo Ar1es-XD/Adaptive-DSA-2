@@ -1,68 +1,107 @@
 import type { DiagnosticQuestion } from "@/lib/types";
 
 export const DIAGNOSTIC_QUESTIONS: DiagnosticQuestion[] = [
-  // Q1 — Logical reasoning: linear growth (arrays / linear scan)
+  // --- LOGICAL PUZZLES (5) ---
   {
-    id: "q1",
+    id: "l1",
     concept: "arrays",
     kind: "logical",
     prompt:
-      "You are scanning a list of numbers to find the largest value. You compare each element with the current maximum one by one.\n\nIf the list size doubles, how does the number of comparisons change? Explain your reasoning.",
+      "You have 8 identical-looking coins, but one is slightly heavier than the others. You have a balance scale. What is the minimum number of weighings needed to find the heavy coin? Explain your strategy.",
     referenceAnswer:
-      "The number of comparisons also roughly doubles. If the list has n elements, you do about n comparisons. Doubling n to 2n means about 2n comparisons — it grows linearly with the size of the list.",
-    referenceReasoning:
-      "Each element is visited exactly once, so the work scales linearly with input size (linear growth).",
+      "2 weighings. Divide into 3 groups (3, 3, 2). Weigh the two groups of 3. If they balance, weigh the 2 from the last group. If they don't, weigh 2 from the heavier group of 3.",
+    referenceReasoning: "Tests the ability to think in terms of logarithmic search/division of space (base 3 in this case).",
   },
-
-  // Q2 — Logical reasoning: hidden quadratic (nested comparisons → motivates two pointers / smarter scans)
   {
-    id: "q2",
+    id: "l2",
     concept: "two-pointers",
     kind: "logical",
     prompt:
-      "You have a list of n numbers. For each number, you compare it with every other number in the list.\n\nHow does the number of comparisons grow as n increases? Explain in simple terms.",
+      "Four people need to cross a fragile bridge at night. It's dark and they only have one torch. The bridge can only hold two people at a time. Each person walks at a different speed: A (1 min), B (2 min), C (5 min), and D (10 min). When two people cross, they must walk at the slower person's pace. What is the fastest way to get everyone across? (Total time).",
     referenceAnswer:
-      "For each of the n numbers you do about n comparisons, so the total is about n × n = n² comparisons. If n doubles, the work grows roughly four times. The growth is quadratic — much faster than linear.",
-    referenceReasoning:
-      "Two nested passes over the list produce n² work; the student should recognize the multiplicative effect, not just say 'a lot more'.",
+      "17 minutes. A&B cross (2), A returns (1), C&D cross (10), B returns (2), A&B cross (2). 2+1+10+2+2 = 17.",
+    referenceReasoning: "Tests optimization logic and the ability to challenge the obvious 'send the fastest back every time' greedy strategy.",
   },
-
-  // Q3 — Conceptual: what does O(n) mean
   {
-    id: "q3",
+    id: "l3",
+    concept: "recursion",
+    kind: "logical",
+    prompt:
+      "A set of Russian Dolls is nested inside each other. If you want to find a tiny piece of paper hidden inside the smallest doll, and you have 100 dolls, what is the 'algorithm' you would use to get to it? Describe the repetitive step.",
+    referenceAnswer:
+      "Open current doll. If there is a smaller doll inside, repeat the process for the smaller doll. Otherwise, take the paper. This is recursion.",
+    referenceReasoning: "Tests intuitive understanding of recursive base cases and self-similarity.",
+  },
+  {
+    id: "l4",
     concept: "sliding-window",
-    kind: "conceptual",
+    kind: "logical",
     prompt:
-      "What does it mean when we say an algorithm is O(n)? Explain in your own words (no formal definition needed).",
+      "You are monitoring a temperature sensor. You want to find the highest average temperature over any 3-hour period during a 24-hour day. Instead of recalculating the sum of 3 hours from scratch every time you move forward 1 hour, how could you update the sum more efficiently?",
     referenceAnswer:
-      "It means the work the algorithm does grows in direct proportion to the input size n. If the input doubles, the work roughly doubles. The algorithm touches each item a constant number of times — it does not revisit or re-compare excessively.",
-    referenceReasoning:
-      "The student should convey proportional growth and the intuition of 'one pass / constant work per item', not just repeat the symbol.",
+      "Subtract the temperature from the hour that just left the 3-hour window and add the temperature from the new hour that just entered. This avoids redundant addition.",
+    referenceReasoning: "Tests the 'Sliding Window' optimization intuition—reusing previous work.",
+  },
+  {
+    id: "l5",
+    concept: "arrays",
+    kind: "logical",
+    prompt:
+      "In a line of 10 people, everyone is wearing either a red or blue hat. Each person can only see the hats of the people in front of them. The last person in line (who sees 9 hats) says 'Blue' if they see an even number of blue hats, and 'Red' otherwise. How can the other 9 people use this information to determine their own hat color with 100% certainty?",
+    referenceAnswer:
+      "The first person's shout establishes a 'parity' (even/odd) of blue hats. Each subsequent person, seeing the hats ahead and hearing the shouts behind, can deduce if their own hat must be blue or red to maintain the parity.",
+    referenceReasoning: "Tests complex logical deduction and information propagation logic.",
   },
 
-  // Q4 — Coding: max element in array (basic implementation)
+  // --- CODING QUESTIONS (5) ---
   {
-    id: "q4",
+    id: "c1",
     concept: "arrays",
     kind: "coding",
     language: "python",
     prompt:
-      "Write a function `find_max(nums)` that returns the maximum element in the list `nums`.\n\nExample:\nInput: [3, 1, 7, 2]\nOutput: 7\n\nYou may assume `nums` has at least one element.",
-    starter: "def find_max(nums):\n    # your code here\n    pass\n",
-    referenceAnswer:
-      "def find_max(nums):\n    best = nums[0]\n    for x in nums[1:]:\n        if x > best:\n            best = x\n    return best",
+      "Write a function `reverse_list(items)` that returns a new list with the elements in reverse order.\n\nInput: [1, 2, 3]\nOutput: [3, 2, 1]",
+    starter: "def reverse_list(items):\n    # your code here\n    pass\n",
+    referenceAnswer: "def reverse_list(items):\n    return items[::-1]",
   },
-
-  // Q5 — Coding: consecutive pair sum > 100 (adjacency / pattern lite)
   {
-    id: "q5",
+    id: "c2",
     concept: "two-pointers",
     kind: "coding",
     language: "python",
     prompt:
-      "Given a list of integers `nums`, return True if there exist two CONSECUTIVE numbers whose sum is greater than 100, otherwise return False.\n\nExample:\nInput: [10, 60, 50, 20]\nOutput: True   (because 60 + 50 > 100)\n\nIf the list has fewer than 2 elements, return False.",
-    starter: "def has_consecutive_big_sum(nums):\n    # your code here\n    pass\n",
-    referenceAnswer:
-      "def has_consecutive_big_sum(nums):\n    for i in range(len(nums) - 1):\n        if nums[i] + nums[i + 1] > 100:\n            return True\n    return False",
+      "Write a function `is_palindrome(s)` that returns True if a string reads the same forwards and backwards, and False otherwise.\n\nInput: 'radar'\nOutput: True",
+    starter: "def is_palindrome(s):\n    # your code here\n    pass\n",
+    referenceAnswer: "def is_palindrome(s):\n    return s == s[::-1]",
+  },
+  {
+    id: "c3",
+    concept: "recursion",
+    kind: "coding",
+    language: "python",
+    prompt:
+      "Write a function `factorial(n)` that calculates the product of all positive integers up to n. (e.g., 5! = 5*4*3*2*1 = 120).\n\nYou may assume n >= 0.",
+    starter: "def factorial(n):\n    # your code here\n    pass\n",
+    referenceAnswer: "def factorial(n):\n    if n <= 1: return 1\n    return n * factorial(n-1)",
+  },
+  {
+    id: "c4",
+    concept: "sliding-window",
+    kind: "coding",
+    language: "python",
+    prompt:
+      "Given a list of numbers `nums`, find the maximum sum of any two adjacent elements.\n\nInput: [1, 5, 2, 8, 3]\nOutput: 11 (because 8 + 3 = 11)",
+    starter: "def max_adjacent_sum(nums):\n    # your code here\n    pass\n",
+    referenceAnswer: "def max_adjacent_sum(nums):\n    if len(nums) < 2: return 0\n    max_sum = nums[0] + nums[1]\n    for i in range(len(nums) - 1):\n        max_sum = max(max_sum, nums[i] + nums[i+1])\n    return max_sum",
+  },
+  {
+    id: "c5",
+    concept: "arrays",
+    kind: "coding",
+    language: "python",
+    prompt:
+      "Write a function `fizz_buzz(n)` that returns a list of strings from 1 to n. But for multiples of 3, use 'Fizz', for multiples of 5, use 'Buzz', and for multiples of both 3 and 5, use 'FizzBuzz'.\n\nInput: 5\nOutput: ['1', '2', 'Fizz', '4', 'Buzz']",
+    starter: "def fizz_buzz(n):\n    # your code here\n    pass\n",
+    referenceAnswer: "def fizz_buzz(n):\n    res = []\n    for i in range(1, n+1):\n        if i % 15 == 0: res.append('FizzBuzz')\n        elif i % 3 == 0: res.append('Fizz')\n        elif i % 5 == 0: res.append('Buzz')\n        else: res.append(str(i))\n    return res",
   },
 ];
