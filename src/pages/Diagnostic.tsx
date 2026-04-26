@@ -57,11 +57,10 @@ const Diagnostic = () => {
   const [questionStartTime, setQuestionStartTime] = useState<number>(0);
   const [isCheating, setIsCheating] = useState(false);
 
-  const activeLanguage: Language = q?.kind === "coding" ? selectedLanguage : (q?.language ?? "python");
-
   const q = DIAGNOSTIC_QUESTIONS[idx];
+  const activeLanguage: Language = q?.kind === "coding" ? selectedLanguage : (q?.language ?? "python");
   const isLast = idx === DIAGNOSTIC_QUESTIONS.length - 1;
-  const Phase = phaseMeta[q.kind];
+  const Phase = q ? phaseMeta[q.kind] : phaseMeta.logical;
   const PhaseIcon = Phase.icon;
 
   useEffect(() => {
