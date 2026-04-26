@@ -10,7 +10,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const diagnosticDone = useTutorStore(s => s.diagnosticDone);
 
   const isOnboarding = ONBOARDING_ROUTES.includes(pathname);
-  const showNav = !isOnboarding && diagnosticDone;
+  // Navbar appears if diagnostic is done, UNLESS we are in the middle of onboarding (except home /)
+  const showNav = diagnosticDone && (pathname === "/" || !isOnboarding);
 
   // Guard: not signed up → force back to signup
   if (!user && !isOnboarding) {

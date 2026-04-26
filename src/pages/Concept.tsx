@@ -286,6 +286,181 @@ const RecursionViz = () => {
   );
 };
 
+// ─── STACK VISUALIZATION ───────────────────────────────────────────────────
+const StackViz = () => {
+  const [items, setItems] = useState<string[]>(["A", "B"]);
+  const [action, setAction] = useState<"push" | "pop" | "idle">("idle");
+  
+  const push = () => {
+    if (items.length >= 6) return;
+    setAction("push");
+    setTimeout(() => {
+      setItems(prev => [...prev, String.fromCharCode(65 + prev.length)]);
+      setAction("idle");
+    }, 400);
+  };
+  
+  const pop = () => {
+    if (items.length === 0) return;
+    setAction("pop");
+    setTimeout(() => {
+      setItems(prev => prev.slice(0, -1));
+      setAction("idle");
+    }, 400);
+  };
+
+  return (
+    <div className="bg-[#1e1e1e] rounded-3xl p-8 border-4 border-foreground">
+      <div className="text-xs font-black uppercase tracking-widest text-primary mb-6">Live: LIFO (Last In First Out)</div>
+      <div className="flex flex-col-reverse items-center justify-end h-[300px] border-b-8 border-gray-700 w-40 mx-auto bg-gray-900/50 rounded-b-2xl p-4 gap-2 mb-8">
+        {items.map((item, i) => (
+          <div 
+            key={i} 
+            className={cn(
+              "w-full h-12 flex items-center justify-center rounded-xl border-4 font-black text-xl transition-all duration-300",
+              i === items.length - 1 && action === "pop" ? "bg-red-500 border-foreground scale-0 opacity-0" :
+              i === items.length - 1 ? "bg-primary text-white border-foreground" :
+              "bg-gray-800 text-gray-500 border-gray-700"
+            )}
+          >
+            {item}
+          </div>
+        ))}
+      </div>
+      <div className="flex justify-center gap-4">
+        <Button onClick={push} disabled={action !== "idle" || items.length >= 6} className="bg-primary shadow-[4px_4px_0_0_#000] font-bold">Push</Button>
+        <Button onClick={pop} disabled={action !== "idle" || items.length === 0} className="bg-red-600 shadow-[4px_4px_0_0_#000] font-bold">Pop</Button>
+      </div>
+    </div>
+  );
+};
+
+// ─── HASH MAP VISUALIZATION ──────────────────────────────────────────────────
+const HashMapViz = () => {
+  const [keys, setKeys] = useState<{k: string, v: string, h: number}[]>([]);
+  const [inputK, setInputK] = useState("name");
+  const [inputV, setInputV] = useState("algora");
+  const size = 8;
+  
+  const insert = () => {
+    const h = inputK.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) % size;
+    setKeys(prev => [{k: inputK, v: inputV, h}, ...prev.slice(0, 5)]);
+    setInputK(""); setInputV("");
+  };
+
+  return (
+    <div className="bg-[#1e1e1e] rounded-3xl p-8 border-4 border-foreground">
+      <div className="text-xs font-black uppercase tracking-widest text-primary mb-6">Live: Key-Value Hashing</div>
+      <div className="grid grid-cols-8 gap-2 mb-10">
+        {Array.from({length: size}).map((_, i) => (
+          <div key={i} className="flex flex-col items-center gap-2">
+            <div className={cn(
+              "w-full h-16 rounded-xl border-4 flex items-center justify-center font-bold text-xs overflow-hidden",
+              keys[0]?.h === i ? "border-primary bg-primary/20 text-white" : "border-gray-800 bg-gray-900 text-gray-600"
+            )}>
+              {keys.filter(k => k.h === i).map(k => k.v.slice(0,3))}
+            </div>
+            <span className="text-[10px] font-mono text-gray-500">{i}</span>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-4 items-end">
+        <div className="flex-1 space-y-2">
+          <label className="text-[10px] uppercase font-black text-gray-500">Key</label>
+          <input value={inputK} onChange={e => setInputK(e.target.value)} className="w-full bg-gray-800 border-2 border-gray-700 rounded-lg p-2 text-white text-sm" />
+        </div>
+        <div className="flex-1 space-y-2">
+          <label className="text-[10px] uppercase font-black text-gray-500">Value</label>
+          <input value={inputV} onChange={e => setInputV(e.target.value)} className="w-full bg-gray-800 border-2 border-gray-700 rounded-lg p-2 text-white text-sm" />
+        </div>
+        <Button onClick={insert} className="bg-primary h-10 font-bold shadow-[3px_3px_0_0_#000]">Hash & Set</Button>
+      </div>
+    </div>
+  );
+};
+
+// ─── BINARY SEARCH VISUALIZATION ─────────────────────────────────────────────
+const BinarySearchViz = () => {
+  const nums = [2, 5, 8, 12, 16, 23, 38, 56, 72, 91];
+  const target = 23;
+  const [l, setL] = useState(0);
+  const [r, setR] = useState(nums.length - 1);
+  const [step, setStep] = useState(0);
+  const mid = Math.floor((l + r) / 2);
+  
+  const next = () => {
+    if (nums[mid] === target) return;
+    if (nums[mid] < target) setL(mid + 1);
+    else setR(mid - 1);
+    setStep(s => s + 1);
+  };
+
+  const reset = () => { setL(0); setR(nums.length - 1); setStep(0); };
+
+  return (
+    <div className="bg-[#1e1e1e] rounded-3xl p-8 border-4 border-foreground">
+      <div className="text-xs font-black uppercase tracking-widest text-primary mb-6">Live: Binary Search (Target: {target})</div>
+      <div className="flex gap-2 mb-10 flex-wrap justify-center">
+        {nums.map((n, i) => (
+          <div key={i} className={cn(
+            "w-12 h-12 flex items-center justify-center rounded-lg border-2 font-black transition-all duration-500",
+            i === mid ? "border-yellow-400 bg-yellow-400 text-black scale-110 z-10" :
+            i < l || i > r ? "border-gray-800 bg-gray-900 text-gray-700" :
+            "border-gray-600 bg-gray-800 text-white"
+          )}>{n}</div>
+        ))}
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-mono text-gray-500">
+          L: {l} | R: {r} | Mid: {mid}
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={reset} size="sm" variant="outline" className="text-xs">Reset</Button>
+          <Button onClick={next} disabled={nums[mid] === target} className="bg-primary font-bold shadow-[3px_3px_0_0_#000] text-xs">
+            {nums[mid] === target ? "✓ Found" : "Calculate Mid"}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── STRINGS VISUALIZATION ──────────────────────────────────────────────────
+const StringsViz = () => {
+  const text = "ALGO POWER";
+  const pattern = "POW";
+  const [offset, setOffset] = useState(0);
+  const [found, setFound] = useState(false);
+  
+  const shift = () => {
+    if (offset >= text.length - pattern.length) { setOffset(0); setFound(false); return; }
+    const next = offset + 1;
+    setOffset(next);
+    if (text.slice(next, next + pattern.length) === pattern) setFound(true);
+  };
+
+  return (
+    <div className="bg-[#1e1e1e] rounded-3xl p-8 border-4 border-foreground">
+      <div className="text-xs font-black uppercase tracking-widest text-primary mb-6">Live: Naive String Matching</div>
+      <div className="font-mono text-3xl tracking-[0.5em] text-white mb-6 flex justify-center bg-black/40 p-6 rounded-2xl">
+        {text.split("").map((c, i) => (
+          <span key={i} className={cn(
+            i >= offset && i < offset + pattern.length ? (found ? "text-green-400" : "text-primary underline decoration-4 underline-offset-8") : "opacity-30"
+          )}>{c === " " ? "\u00A0" : c}</span>
+        ))}
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+          {found ? "Pattern Found!" : `Scanning: offset ${offset}`}
+        </div>
+        <Button onClick={shift} className="bg-primary font-bold shadow-[3px_3px_0_0_#000]">
+          {found ? "Restart" : "Shift Pattern"}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 // ─── COMPLEXITY TABLE ─────────────────────────────────────────────────────────
 const ComplexityTable = ({ data }: { data: Record<string, string> }) => (
   <div className="grid grid-cols-2 gap-4">
@@ -297,6 +472,7 @@ const ComplexityTable = ({ data }: { data: Record<string, string> }) => (
     ))}
   </div>
 );
+
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 const Concept = () => {
@@ -317,10 +493,10 @@ const Concept = () => {
     "two-pointers": TwoPointerViz,
     "sliding-window": SlidingWindowViz,
     recursion: RecursionViz,
-    "hash-map": null,
-    stack: null,
-    "binary-search": null,
-    strings: null,
+    "hash-map": HashMapViz,
+    stack: StackViz,
+    "binary-search": BinarySearchViz,
+    strings: StringsViz,
   }[concept as string] ?? null;
 
   return (
