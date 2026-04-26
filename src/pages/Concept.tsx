@@ -115,6 +115,12 @@ const ArrayViz = forwardRef<VisualizerHandle>((_, ref) => {
           {running ? "Running…" : "▶ Restart"}
         </Button>
       </div>
+      {step === nums.length - 1 && (
+        <div className="mt-4 p-4 bg-green-400/10 border-2 border-green-400 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-2">
+          <span className="text-[10px] font-black uppercase text-green-400 tracking-widest">Final Maximum</span>
+          <span className="text-xl font-black text-green-300 font-mono">{currentMax}</span>
+        </div>
+      )}
     </VisualizerLayout>
   );
 });
@@ -209,6 +215,12 @@ const TwoPointerViz = forwardRef<VisualizerHandle>((_, ref) => {
           {running ? "Running…" : "▶ Restart"}
         </Button>
       </div>
+      {found && (
+        <div className="mt-4 p-4 bg-green-400/10 border-2 border-green-400 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-2">
+          <span className="text-[10px] font-black uppercase text-green-400 tracking-widest">Result Found</span>
+          <span className="text-sm font-black text-green-300 font-mono">Index {left} and {right} sum to {target}</span>
+        </div>
+      )}
     </VisualizerLayout>
   );
 });
@@ -291,6 +303,12 @@ const SlidingWindowViz = forwardRef<VisualizerHandle>((_, ref) => {
           {running ? "Running…" : "▶ Restart"}
         </Button>
       </div>
+      {windowStart === nums.length - k && !running && (
+        <div className="mt-4 p-4 bg-green-400/10 border-2 border-green-400 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-2">
+          <span className="text-[10px] font-black uppercase text-green-400 tracking-widest">Max Subarray Sum</span>
+          <span className="text-xl font-black text-green-300 font-mono">{maxSum}</span>
+        </div>
+      )}
     </VisualizerLayout>
   );
 });
@@ -376,6 +394,15 @@ const RecursionViz = forwardRef<VisualizerHandle>((_, ref) => {
           {running ? "Running…" : "▶ Restart"}
         </Button>
       </div>
+      {current.val !== null && (
+        <div className="mt-6 p-4 bg-green-400/10 border-2 border-green-400 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-2">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase text-green-400 tracking-widest mb-1">Function Result</span>
+            <span className="text-xs text-green-500/70 font-medium">factorial(4) calculated</span>
+          </div>
+          <span className="text-2xl font-black text-green-300 font-mono">{current.val}</span>
+        </div>
+      )}
     </VisualizerLayout>
   );
 });
@@ -558,6 +585,12 @@ const BinarySearchViz = forwardRef<VisualizerHandle>((_, ref) => {
           </Button>
         </div>
       </div>
+      {nums[mid] === target && (
+        <div className="mt-4 p-4 bg-green-400/10 border-2 border-green-400 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-2">
+          <span className="text-[10px] font-black uppercase text-green-400 tracking-widest">Found at Index</span>
+          <span className="text-xl font-black text-green-300 font-mono">{mid}</span>
+        </div>
+      )}
     </VisualizerLayout>
   );
 });
@@ -606,6 +639,12 @@ const StringsViz = forwardRef<VisualizerHandle>((_, ref) => {
           {found ? "Restart" : "Shift"}
         </Button>
       </div>
+      {found && (
+        <div className="mt-4 p-4 bg-green-400/10 border-2 border-green-400 rounded-xl flex items-center justify-between animate-in fade-in slide-in-from-bottom-2">
+          <span className="text-[10px] font-black uppercase text-green-400 tracking-widest">Pattern Match</span>
+          <span className="text-sm font-black text-green-300 font-mono">Found at Offset {offset}</span>
+        </div>
+      )}
     </VisualizerLayout>
   );
 });
