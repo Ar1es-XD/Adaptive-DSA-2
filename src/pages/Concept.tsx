@@ -748,6 +748,10 @@ const Concept = () => {
     strings: StringsViz,
   }[concept as string] as React.ComponentType<{ ref: React.Ref<VisualizerHandle> }> | undefined;
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [concept]);
+
   return (
     <div className="min-h-full bg-background font-sans">
       <main className="container max-w-5xl py-12">
