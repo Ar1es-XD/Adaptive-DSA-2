@@ -622,6 +622,25 @@ const ComplexityTable = ({ data }: { data: Record<string, string> }) => (
   </div>
 );
 
+const SectionLabel = ({ icon: Icon, label, onPlay }: { icon: any; label: string; onPlay?: () => void }) => (
+  <div className="flex items-center justify-between mb-8">
+    <div className="flex items-center gap-3">
+      <div className="bg-primary/10 p-2 rounded-lg">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
+      <h2 className="text-sm font-black uppercase tracking-[0.3em] text-foreground/70">{label}</h2>
+    </div>
+    {onPlay && (
+      <Button 
+        onClick={onPlay} 
+        size="sm" 
+        className="rounded-xl bg-primary text-white font-bold h-10 px-6 shadow-[4px_4px_0_0_#000] hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all border-2 border-foreground uppercase tracking-widest text-[10px]"
+      >
+        <PlayCircle className="mr-2 h-4 w-4" /> Run Animation
+      </Button>
+    )}
+  </div>
+);
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 const Concept = () => {
