@@ -742,7 +742,7 @@ Special thanks to:
 
 ⭐ **If you find this project helpful, please consider starring the repository!**
 
-[Visit Live Demo](https://adaptive-dsa-2.vercel.app) • 
+[Visit Live Demo](https://adaptive-dsa.vercel.app/) • 
 [Report Bug](https://github.com/Ar1es-XD/Adaptive-DSA-2/issues) • 
 [Request Feature](https://github.com/Ar1es-XD/Adaptive-DSA-2/discussions)
 
